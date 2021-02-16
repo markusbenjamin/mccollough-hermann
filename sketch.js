@@ -42,7 +42,7 @@ function setup() {
     stimY = height * 0.57;
     stimSize = min(width, height) * 0.7;
     mcLineNum = 21;
-    hgWidthFactor = 0.25;
+    hgWidthFactor = 0.251;
     hgBlockNum = 6;
     resetColors();
     modifyColor = false;
