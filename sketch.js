@@ -1,5 +1,7 @@
 var switchTime;
+var maskTime;
 var adaptTime;
+var adaptCounter;
 var expStartTime;
 var subject;
 var stimSize;
@@ -12,6 +14,9 @@ var hgBlockNum;
 var mcColors;
 var hgColors;
 var modifyColor;
+var adapt;
+var mask;
+var timestamp;
 var colorRadio;
 var vhRadio;
 var testStimRadio;
@@ -36,8 +41,9 @@ function setup() {
 
     mcWidthFactor = 1;
     switchTime = 2000;
+    maskTime = 500;
     adaptTime = 5;
-    subject = "None";
+    subject = "Test";
     stimX = width * 0.5;
     stimY = height * 0.57;
     stimSize = min(width, height) * 0.7;
@@ -46,13 +52,16 @@ function setup() {
     hgBlockNum = 6;
     resetColors();
     modifyColor = false;
+    adapt = true;
+    mask = false;
+    adaptCounter = 0;
 
     state = 0;
 
     mcWidthSlider = createSlider(0, 200, 100);
     hgWidthSlider = createSlider(0, 150, 25);
 
-    subjectInput = createInput('test');
+    subjectInput = createInput(subject);
     switchTimeInput = createInput(switchTime);
     adaptTimeInput = createInput(adaptTime);
     startButton = createButton('Start!');
@@ -91,14 +100,39 @@ function windowResized() {
 }
 
 function draw() {
+
     background(0.8);
     if (state == 0) {
         drawSettingsUI();
         handleSliders();
     }
     else if (state == 1) {
-        var flicker = floor(millis() / switchTime) % 2;
-        drawMcColloughStimulus(color(flicker, !flicker, 0), stimSize, mcLineNum, stimX, stimY, flicker, mcWidthFactor);
+        if (adapt) {
+            if (millis() - timestamp < switchTime) {
+                var flicker = (adaptCounter/2)%2;
+                drawMcColloughStimulus(color(flicker, !flicker, 0), stimSize, mcLineNum, stimX, stimY, flicker, mcWidthFactor);
+            }
+            else {
+                adapt = false;
+                mask = true;
+                adaptCounter++;
+                timestamp = millis();
+            }
+        }
+        else if (mask) {
+            if (millis() - timestamp < maskTime) {
+                fill(0);
+                rect(stimX, stimY, stimSize, stimSize);
+                noFill();
+            }
+            else {
+                adapt = true;
+                mask = false;
+                adaptCounter++;
+                timestamp = millis();
+            }
+        }
+
     }
     else if (state == 2) {
         for (var i = -1; i < 2; i += 2) {
@@ -204,6 +238,7 @@ function drawSettingsUI() {
 function startExperiment() {
     setParameters();
     expStartTime = millis();
+    timestamp = expStartTime;
     state = 1;
 }
 
