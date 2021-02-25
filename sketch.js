@@ -11,8 +11,9 @@ var mcLineNum;
 var mcWidthFactor;
 var hgWidthFactor;
 var hgBlockNum;
-var mcColors;
-var hgColors;
+var adaptColors;
+var mcNullingColors;
+var hgNullingColors;
 var modifyColor;
 var adapt;
 var mask;
@@ -25,15 +26,17 @@ var subjectInput;
 var switchTimeInput;
 var adaptTimeInput;
 var startButton;
+var colorChannel;
 
 var state;
 
 var mcWidthSlider;
 var hgWidthSlider;
+var nullingSlider;
 
 function setup() {
     createCanvas(min(windowWidth, 1200), min(windowWidth, 1200) * 6 / 8);
-    colorMode(RGB, 1);
+    colorMode(HSB, 1);
     rectMode(CENTER);
     noStroke();
     noFill();
@@ -42,7 +45,7 @@ function setup() {
     mcWidthFactor = 1;
     switchTime = 2000;
     maskTime = 500;
-    adaptTime = 5;
+    adaptTime = 20;
     subject = "Test";
     stimX = width * 0.5;
     stimY = height * 0.57;
@@ -50,7 +53,8 @@ function setup() {
     mcLineNum = 21;
     hgWidthFactor = 0.251;
     hgBlockNum = 6;
-    resetColors();
+    adaptColors = [color(1, 1, 1), color(1 / 3, 1, 1)];
+    resetNullingColors();
     modifyColor = false;
     adapt = true;
     mask = false;
@@ -73,13 +77,14 @@ function setup() {
     vhRadio.selected('vertical');
 
     colorRadio = createRadio('colorRadio');
-    colorRadio.option('red');
+    /*colorRadio.option('red');
     colorRadio.option('green');
-    colorRadio.option('blue');
+    colorRadio.option('blue');*/
     colorRadio.option('hue');
     colorRadio.option('saturation');
     colorRadio.option('brightness');
-    colorRadio.selected('red');
+    colorRadio.selected('saturation');
+    colorChannel = 1;
 
     clipboardButton = createButton('Copy to clipboard');
     clipboardButton.mousePressed(nullingsToClipboard);
@@ -88,6 +93,8 @@ function setup() {
     testStimRadio.option('McCollough');
     testStimRadio.option('Hermann Grid');
     testStimRadio.selected('McCollough');
+
+    nullingSlider = createSlider(0, 1000, 0);
 
     setUIVisibility();
 }
@@ -100,17 +107,20 @@ function windowResized() {
 }
 
 function draw() {
-
     background(0.8);
+    if (colorChannel !== colorRadioMapper(colorRadio.value())) {
+        updateNullingSlider();
+        colorChannel = colorRadioMapper(colorRadio.value());
+    }
     if (state == 0) {
         drawSettingsUI();
-        handleSliders();
+        handleWidthSliders();
     }
     else if (state == 1) {
         if (adapt) {
             if (millis() - timestamp < switchTime) {
-                var flicker = (adaptCounter/2)%2;
-                drawMcColloughStimulus(color(flicker, !flicker, 0), stimSize, mcLineNum, stimX, stimY, flicker, mcWidthFactor);
+                var flicker = (adaptCounter / 2) % 2;
+                drawMcColloughStimulus(adaptColors[flicker], stimSize, mcLineNum, stimX, stimY, flicker, mcWidthFactor);
             }
             else {
                 adapt = false;
@@ -137,29 +147,57 @@ function draw() {
     else if (state == 2) {
         for (var i = -1; i < 2; i += 2) {
             for (var j = -1; j < 2; j += 2) {
-                drawMcColloughStimulus(mcColors[abs(i - j) / 2], stimSize * 0.5, mcLineNum, width * 0.5 + i * 1.025 * stimSize / 4, stimY + j * 1.025 * stimSize / 4, abs(i + j) / 2, mcWidthFactor);
+                drawMcColloughStimulus(mcNullingColors[abs(i - j) / 2], stimSize * 0.5, mcLineNum, width * 0.5 + i * 1.025 * stimSize / 4, stimY + j * 1.025 * stimSize / 4, abs(i + j) / 2, mcWidthFactor);
             }
         }
         drawTestStimUI();
+        handleNullingSlider();
+
     }
     else if (state == 3) {
-        drawHermannGrid(hgBlockNum, hgWidthFactor, stimSize, hgColors[0], hgColors[1], stimX, stimY);
+        drawHermannGrid(hgBlockNum, hgWidthFactor, stimSize, hgNullingColors[0], hgNullingColors[1], stimX, stimY);
         drawTestStimUI();
+        handleNullingSlider();
+
     }
     if (keyIsPressed) {
         if (modifyColor && key == 'w') {
             changeColor(255 / 50000);
+            updateNullingSlider();
         }
         if (modifyColor && key == 'q') {
             changeColor(-255 / 50000);
+            updateNullingSlider();
         }
     }
-    controlFlow();
+    if (controlFlow() === false) {
+        updateNullingSlider();
+    }
     setUIVisibility();
 }
 
+function updateNullingSlider() {
+    var color = [mcNullingColors, hgNullingColors][state - 2][vhRadioMapper(vhRadio.value())];
+    var val = 1000 * colorToArrayHSB(color)[colorRadioMapper(colorRadio.value())] + 0.0;
+    nullingSlider.value(val);
+}
+
+function handleNullingSlider() {
+    val = nullingSlider.value();
+    if (state === 2) {
+        var color = colorToArrayHSB(mcNullingColors[vhRadioMapper(vhRadio.value())]);
+        color[colorRadioMapper(colorRadio.value())] = val / 1000;
+        mcNullingColors[vhRadioMapper(vhRadio.value())] = arrayToHSBColor(color);
+    }
+    else if (state === 3) {
+        var color = colorToArrayHSB(hgNullingColors[vhRadioMapper(vhRadio.value())]);
+        color[colorRadioMapper(colorRadio.value())] = val / 1000;
+        hgNullingColors[vhRadioMapper(vhRadio.value())] = arrayToHSBColor(color);
+    }
+}
+
 function drawTestStimUI() {
-    var colors = [mcColors, hgColors];
+    var colors = [mcNullingColors, hgNullingColors];
     if (modifyColor) {
         vhRadio.position(width * 0.19 - round(width * 1.1 / 7), height * 0.1);
         vhRadio.style('width', round(width * 2.5 / 7) + 'px');
@@ -170,6 +208,9 @@ function drawTestStimUI() {
         colorRadio.style('width', round(width * 5 / 7) + 'px');
         colorRadio.style('font-family', 'Arial');
         colorRadio.style('font-size', round(width * 0.14 / 7) + 'px');
+
+        nullingSlider.position(width * 0.19 - round(width * 1.1 / 7), height * 0.18);
+        nullingSlider.style('width', round(width * 2.85 / 7) + 'px');
 
         textSize(round(width * 0.14 / 7));
         fill(0);
@@ -243,9 +284,11 @@ function startExperiment() {
 }
 
 function controlFlow() {
+    prevState = state;
     if (millis() - expStartTime > adaptTime * 60 * 1000) {
         state = testStimRadioMapper(testStimRadio.value()) + 2;
     }
+    return state === prevState;
 }
 
 function setParameters() {
@@ -254,7 +297,7 @@ function setParameters() {
     adaptTime = adaptTimeInput.value();
 }
 
-function handleSliders() {
+function handleWidthSliders() {
     mcWidthFactor = mcWidthSlider.value() / 100;
     hgWidthFactor = hgWidthSlider.value() / 100;
 }
@@ -298,36 +341,45 @@ function colorRadioMapper(val) {
     }
 }
 
-function resetColors() {
-    mcColors = [color(1, 1, 1), color(1, 1, 1)];
-    hgColors = [color(1, 1, 1), color(1, 1, 1)];
+function resetNullingColors() {
+    mcNullingColors = [color(hue(adaptColors[0]), 0, 1), color(hue(adaptColors[1]), 0, 1)];
+    hgNullingColors = [color(hue(adaptColors[0]), 0, 1), color(hue(adaptColors[1]), 0, 1)];
 }
 
 function changeColor(change) {
     var vhVal = vhRadioMapper(vhRadio.value());
     var colorVal = colorRadioMapper(colorRadio.value());
     if (state == 2) {
-        var arr = colorToArray(mcColors[vhVal]);
+        var arr = colorToArray(mcNullingColors[vhVal]);
         if (colorVal < 3) {
             arr[colorVal] = constrain(arr[colorVal] + change, 0, 1);
-            mcColors[vhVal] = arrayToHSBColor(arr);
+            mcNullingColors[vhVal] = arrayToHSBColor(arr);
         }
         else if (colorVal > 2) {
             arr[colorVal] = constrain(arr[colorVal] + change, 0, 1);
-            mcColors[vhVal] = arrayToRGBColor(arr);
+            mcNullingColors[vhVal] = arrayToRGBColor(arr);
         }
     }
     else if (state == 3) {
-        var arr = colorToArray(hgColors[vhVal]);
+        var arr = colorToArray(hgNullingColors[vhVal]);
         if (colorVal < 3) {
             arr[colorVal] = constrain(arr[colorVal] + change, 0, 1);
-            hgColors[vhVal] = arrayToHSBColor(arr);
+            hgNullingColors[vhVal] = arrayToHSBColor(arr);
         }
         else if (colorVal > 2) {
             arr[colorVal] = constrain(arr[colorVal] + change, 0, 1);
-            hgColors[vhVal] = arrayToRGBColor(arr);
+            hgNullingColors[vhVal] = arrayToRGBColor(arr);
         }
     }
+}
+
+function colorToArrayHSB(col) {
+    var arr = [];
+    colorMode(HSB, 1);
+    arr.push(hue(col));
+    arr.push(saturation(col));
+    arr.push(brightness(col));
+    return arr;
 }
 
 function colorToArray(col) {
@@ -346,13 +398,15 @@ function colorToArray(col) {
 function arrayToHSBColor(arr) {
     colorMode(HSB, 1);
     var col = color(arr[0], arr[1], arr[2]);
-    colorMode(RGB, 1);
+    colorMode(HSB, 1);
     return col;
 }
 
 function arrayToRGBColor(arr) {
     colorMode(RGB, 1);
-    return color(arr[3], arr[4], arr[5]);
+    var col = color(arr[3], arr[4], arr[5]);
+    colorMode(HSB, 1);
+    return col;
 }
 
 function drawMcColloughStimulus(c, s, n, x, y, o, wF) {
@@ -424,7 +478,7 @@ function keyPressed() {
             modifyColor = !modifyColor;
         }
         if (key == 'r' || key == 'R') {
-            resetColors();
+            resetNullingColors();
         }
     }
     /*if (key == 0 || key == 1 || key == 2 || key == 3) {
@@ -436,6 +490,7 @@ function setUIVisibility() {
     if (state == 0) {
         mcWidthSlider.show();
         hgWidthSlider.show();
+        nullingSlider.hide();
         subjectInput.show();
         switchTimeInput.show();
         adaptTimeInput.show();
@@ -454,11 +509,13 @@ function setUIVisibility() {
         testStimRadio.show();
         if (modifyColor) {
             colorRadio.show();
+            nullingSlider.show();
             vhRadio.show();
             clipboardButton.show();
         }
         else {
             colorRadio.hide();
+            nullingSlider.hide();
             vhRadio.hide();
             clipboardButton.hide();
         }
@@ -466,13 +523,14 @@ function setUIVisibility() {
     else {
         testStimRadio.hide();
         colorRadio.hide();
+        nullingSlider.hide();
         vhRadio.hide();
         clipboardButton.hide();
     }
 }
 
 function nullingsToClipboard() {
-    var colors = [mcColors, hgColors];
+    var colors = [mcNullingColors, hgNullingColors];
     var stateName = "null";
     if (state == 2) {
         stateName = "McCollough";
