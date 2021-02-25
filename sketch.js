@@ -222,7 +222,7 @@ function drawTestStimUI() {
         fill(0);
         text("press C to hide\t|\tpress R to reset", width * 0.015, height * 0.04);
         fill(0);
-        text("select option and use Q and W to set nulling color:", width * 0.015, height * 0.085);
+        text("select option and use Q and W or slider to set nulling color:", width * 0.015, height * 0.085);
 
         textAlign(CENTER);
         text("vertical nulling in hex: " + colors[state - 2][0].toString("#rrggbb"), width * 0.77, height * 0.085);
