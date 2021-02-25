@@ -27,6 +27,7 @@ var switchTimeInput;
 var adaptTimeInput;
 var startButton;
 var colorChannel;
+var vhChannel;
 
 var state;
 
@@ -45,7 +46,7 @@ function setup() {
     mcWidthFactor = 1;
     switchTime = 2000;
     maskTime = 500;
-    adaptTime = 20;
+    adaptTime = 0;
     subject = "Test";
     stimX = width * 0.5;
     stimY = height * 0.57;
@@ -75,6 +76,7 @@ function setup() {
     vhRadio.option('vertical');
     vhRadio.option('horizontal');
     vhRadio.selected('vertical');
+    vhChannel = 0;
 
     colorRadio = createRadio('colorRadio');
     /*colorRadio.option('red');
@@ -111,6 +113,10 @@ function draw() {
     if (colorChannel !== colorRadioMapper(colorRadio.value())) {
         updateNullingSlider();
         colorChannel = colorRadioMapper(colorRadio.value());
+    }
+    if (vhChannel !== vhRadioMapper(vhRadio.value())) {
+        updateNullingSlider();
+        vhChannel = vhRadioMapper(vhRadio.value());
     }
     if (state == 0) {
         drawSettingsUI();
@@ -342,8 +348,14 @@ function colorRadioMapper(val) {
 }
 
 function resetNullingColors() {
-    mcNullingColors = [color(hue(adaptColors[0]), 0, 1), color(hue(adaptColors[1]), 0, 1)];
-    hgNullingColors = [color(hue(adaptColors[0]), 0, 1), color(hue(adaptColors[1]), 0, 1)];
+    var vAdaptHue = hue(adaptColors[0]);
+    var hAdaptHue = hue(adaptColors[1]);
+    mcNullingColors = [color(vAdaptHue, 0.001, 1), color(hAdaptHue, 0.01, 1)];
+    hgNullingColors = [color(vAdaptHue, 0.001, 1), color(hAdaptHue, 0.01, 1)];
+
+    if(0<frameCount){
+        updateNullingSlider();
+    }
 }
 
 function changeColor(change) {
