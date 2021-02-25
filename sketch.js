@@ -46,7 +46,7 @@ function setup() {
     mcWidthFactor = 1;
     switchTime = 2000;
     maskTime = 500;
-    adaptTime = 0;
+    adaptTime = 20;
     subject = "Test";
     stimX = width * 0.5;
     stimY = height * 0.57;
