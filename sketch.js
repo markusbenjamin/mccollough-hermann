@@ -348,8 +348,8 @@ function colorRadioMapper(val) {
 }
 
 function resetNullingColors() {
-    var vAdaptHue = hue(adaptColors[0]);
-    var hAdaptHue = hue(adaptColors[1]);
+    var vAdaptHue = hue(adaptColors[1]);
+    var hAdaptHue = hue(adaptColors[0]);
     mcNullingColors = [color(vAdaptHue, 0.001, 1), color(hAdaptHue, 0.01, 1)];
     hgNullingColors = [color(vAdaptHue, 0.001, 1), color(hAdaptHue, 0.01, 1)];
 
