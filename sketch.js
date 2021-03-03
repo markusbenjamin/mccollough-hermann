@@ -101,7 +101,7 @@ function windowResized() {
 
 function draw() {
     background(0.8);
-    if (vhChannel !== vhRadioMapper(vhRadio.value()) || (1<state && state !== prevState)) {
+    if (vhChannel !== vhRadioMapper(vhRadio.value()) || (1 < state && state !== prevState)) {
         if (nullingColors[state - 2][vhRadioMapper(vhRadio.value())][0] === 1) {
             rgState = nullingColors[state - 2][vhRadioMapper(vhRadio.value())][1];
         }
@@ -202,8 +202,8 @@ function drawTestStimUI() {
         fill(0);
         text("press C to hide\t|\tpress S to reset", width * 0.015, height * 0.04);
         text("select option and use G and R or slider to set nulling color:", width * 0.015, height * 0.085);
-        text("GREEN",width * 0.0195, height * 0.185);
-        text("RED",width * 0.455, height * 0.185);
+        text("GREEN", width * 0.0195, height * 0.185);
+        text("RED", width * 0.455, height * 0.185);
 
         textAlign(CENTER);
         text("vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0]).toString("#rrggbb"), width * 0.77, height * 0.085);
@@ -309,7 +309,12 @@ function vhRadioMapper(val) {
 }
 
 function resetNullingColors() {
-    nullingColors = [[[1 / 3, 0, 1], [1, 0, 1]], [[1 / 3, 0, 1], [1, 0, 1]]];
+    if (1 < state) {
+        nullingColors[state-2] = [[1 / 3, 0, 1], [1, 0, 1]];
+    }
+    else {
+        nullingColors = [[[1 / 3, 0, 1], [1, 0, 1]], [[1 / 3, 0, 1], [1, 0, 1]]];
+    }
     rgState = 0;
 
     if (0 < frameCount) {
