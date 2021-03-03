@@ -12,8 +12,7 @@ var mcWidthFactor;
 var hgWidthFactor;
 var hgBlockNum;
 var adaptColors;
-var mcNullingColors;
-var hgNullingColors;
+var nullingColors;
 var modifyColor;
 var adapt;
 var mask;
@@ -79,9 +78,6 @@ function setup() {
     vhChannel = 0;
 
     colorRadio = createRadio('colorRadio');
-    /*colorRadio.option('red');
-    colorRadio.option('green');
-    colorRadio.option('blue');*/
     colorRadio.option('hue');
     colorRadio.option('saturation');
     colorRadio.option('brightness');
@@ -153,7 +149,7 @@ function draw() {
     else if (state == 2) {
         for (var i = -1; i < 2; i += 2) {
             for (var j = -1; j < 2; j += 2) {
-                drawMcColloughStimulus(mcNullingColors[abs(i - j) / 2], stimSize * 0.5, mcLineNum, width * 0.5 + i * 1.025 * stimSize / 4, stimY + j * 1.025 * stimSize / 4, abs(i + j) / 2, mcWidthFactor);
+                drawMcColloughStimulus(arrayToHSBColor(nullingColors[0][abs(i - j) / 2]), stimSize * 0.5, mcLineNum, width * 0.5 + i * 1.025 * stimSize / 4, stimY + j * 1.025 * stimSize / 4, abs(i + j) / 2, mcWidthFactor);
             }
         }
         drawTestStimUI();
@@ -161,7 +157,7 @@ function draw() {
 
     }
     else if (state == 3) {
-        drawHermannGrid(hgBlockNum, hgWidthFactor, stimSize, hgNullingColors[0], hgNullingColors[1], stimX, stimY);
+        drawHermannGrid(hgBlockNum, hgWidthFactor, stimSize, arrayToHSBColor(nullingColors[1][0]), arrayToHSBColor(nullingColors[1][1]), stimX, stimY);
         drawTestStimUI();
         handleNullingSlider();
 
@@ -183,27 +179,15 @@ function draw() {
 }
 
 function updateNullingSlider() {
-    var color = [mcNullingColors, hgNullingColors][state - 2][vhRadioMapper(vhRadio.value())];
-    var val = 1000 * colorToArrayHSB(color)[colorRadioMapper(colorRadio.value())] + 0.0;
+    var val = 1000 * nullingColors[state-2][vhRadioMapper(vhRadio.value())][colorRadioMapper(colorRadio.value())] + 0.0;
     nullingSlider.value(val);
 }
 
 function handleNullingSlider() {
-    val = nullingSlider.value();
-    if (state === 2) {
-        var color = colorToArrayHSB(mcNullingColors[vhRadioMapper(vhRadio.value())]);
-        color[colorRadioMapper(colorRadio.value())] = val / 1000;
-        mcNullingColors[vhRadioMapper(vhRadio.value())] = arrayToHSBColor(color);
-    }
-    else if (state === 3) {
-        var color = colorToArrayHSB(hgNullingColors[vhRadioMapper(vhRadio.value())]);
-        color[colorRadioMapper(colorRadio.value())] = val / 1000;
-        hgNullingColors[vhRadioMapper(vhRadio.value())] = arrayToHSBColor(color);
-    }
+    nullingColors[state-2][vhRadioMapper(vhRadio.value())][colorRadioMapper(colorRadio.value())] = nullingSlider.value()/1000;
 }
 
 function drawTestStimUI() {
-    var colors = [mcNullingColors, hgNullingColors];
     if (modifyColor) {
         vhRadio.position(width * 0.19 - round(width * 1.1 / 7), height * 0.1);
         vhRadio.style('width', round(width * 2.5 / 7) + 'px');
@@ -225,8 +209,8 @@ function drawTestStimUI() {
         text("select option and use Q and W or slider to set nulling color:", width * 0.015, height * 0.085);
 
         textAlign(CENTER);
-        text("vertical nulling in hex: " + colors[state - 2][0].toString("#rrggbb"), width * 0.77, height * 0.085);
-        text("horizontal nulling in hex: " + colors[state - 2][1].toString("#rrggbb"), width * 0.77, height * (0.085 + 1 * 0.04));
+        text("vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0]).toString("#rrggbb"), width * 0.77, height * 0.085);
+        text("horizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][1]).toString("#rrggbb"), width * 0.77, height * (0.085 + 1 * 0.04));
         textAlign(LEFT);
         clipboardButton.position(width * 0.77 - round(width * 0.55 / 8), height * (0.085 + 2 * 0.04) - round(width * 0.13 / 8));
     }
@@ -348,10 +332,7 @@ function colorRadioMapper(val) {
 }
 
 function resetNullingColors() {
-    var vAdaptHue = hue(adaptColors[1]);
-    var hAdaptHue = hue(adaptColors[0]);
-    mcNullingColors = [color(vAdaptHue, 0.001, 1), color(hAdaptHue, 0.01, 1)];
-    hgNullingColors = [color(vAdaptHue, 0.001, 1), color(hAdaptHue, 0.01, 1)];
+    nullingColors = [[[1/3,0,1],[1,0,1]],[[1/3,0,1],[1,0,1]]];
 
     if(0<frameCount){
         updateNullingSlider();
@@ -361,62 +342,12 @@ function resetNullingColors() {
 function changeColor(change) {
     var vhVal = vhRadioMapper(vhRadio.value());
     var colorVal = colorRadioMapper(colorRadio.value());
-    if (state == 2) {
-        var arr = colorToArray(mcNullingColors[vhVal]);
-        if (colorVal < 3) {
-            arr[colorVal] = constrain(arr[colorVal] + change, 0, 1);
-            mcNullingColors[vhVal] = arrayToHSBColor(arr);
-        }
-        else if (colorVal > 2) {
-            arr[colorVal] = constrain(arr[colorVal] + change, 0, 1);
-            mcNullingColors[vhVal] = arrayToRGBColor(arr);
-        }
-    }
-    else if (state == 3) {
-        var arr = colorToArray(hgNullingColors[vhVal]);
-        if (colorVal < 3) {
-            arr[colorVal] = constrain(arr[colorVal] + change, 0, 1);
-            hgNullingColors[vhVal] = arrayToHSBColor(arr);
-        }
-        else if (colorVal > 2) {
-            arr[colorVal] = constrain(arr[colorVal] + change, 0, 1);
-            hgNullingColors[vhVal] = arrayToRGBColor(arr);
-        }
-    }
-}
-
-function colorToArrayHSB(col) {
-    var arr = [];
-    colorMode(HSB, 1);
-    arr.push(hue(col));
-    arr.push(saturation(col));
-    arr.push(brightness(col));
-    return arr;
-}
-
-function colorToArray(col) {
-    var arr = [];
-    colorMode(HSB, 1);
-    arr.push(hue(col));
-    arr.push(saturation(col));
-    arr.push(brightness(col));
-    colorMode(RGB, 1);
-    arr.push(red(col));
-    arr.push(green(col));
-    arr.push(blue(col));
-    return arr;
+    nullingColors[state-2][vhVal][colorVal] = constrain(nullingColors[state-2][vhVal][colorVal]+change,0,1);
 }
 
 function arrayToHSBColor(arr) {
     colorMode(HSB, 1);
     var col = color(arr[0], arr[1], arr[2]);
-    colorMode(HSB, 1);
-    return col;
-}
-
-function arrayToRGBColor(arr) {
-    colorMode(RGB, 1);
-    var col = color(arr[3], arr[4], arr[5]);
     colorMode(HSB, 1);
     return col;
 }
@@ -493,9 +424,6 @@ function keyPressed() {
             resetNullingColors();
         }
     }
-    /*if (key == 0 || key == 1 || key == 2 || key == 3) {
-        state = key;
-    }*/
 }
 
 function setUIVisibility() {
@@ -542,7 +470,6 @@ function setUIVisibility() {
 }
 
 function nullingsToClipboard() {
-    var colors = [mcNullingColors, hgNullingColors];
     var stateName = "null";
     if (state == 2) {
         stateName = "McCollough";
@@ -551,8 +478,8 @@ function nullingsToClipboard() {
         stateName = "Hermann Grid";
     }
     var nullings =
-        "vertical nulling in hex: " + colors[state - 2][0].toString("#rrggbb") +
-        "\nhorizontal nulling in hex: " + colors[state - 2][1].toString("#rrggbb");
+        "vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0]).toString("#rrggbb") +
+        "\nhorizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][1]).toString("#rrggbb");
     copyToClipboard("Subject: " + subject + "\n" + stateName + "\n" + nullings);
 }
 
