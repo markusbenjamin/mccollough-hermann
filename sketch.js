@@ -13,11 +13,11 @@ var hgWidthFactor;
 var hgBlockNum;
 var adaptColors;
 var nullingColors;
+var rgState;
 var modifyColor;
 var adapt;
 var mask;
 var timestamp;
-var colorRadio;
 var vhRadio;
 var testStimRadio;
 var clipboardButton;
@@ -29,6 +29,7 @@ var colorChannel;
 var vhChannel;
 
 var state;
+var prevState;
 
 var mcWidthSlider;
 var hgWidthSlider;
@@ -61,6 +62,7 @@ function setup() {
     adaptCounter = 0;
 
     state = 0;
+    prevState = state;
 
     mcWidthSlider = createSlider(0, 200, 100);
     hgWidthSlider = createSlider(0, 150, 25);
@@ -77,13 +79,6 @@ function setup() {
     vhRadio.selected('vertical');
     vhChannel = 0;
 
-    colorRadio = createRadio('colorRadio');
-    colorRadio.option('hue');
-    colorRadio.option('saturation');
-    colorRadio.option('brightness');
-    colorRadio.selected('saturation');
-    colorChannel = 1;
-
     clipboardButton = createButton('Copy to clipboard');
     clipboardButton.mousePressed(nullingsToClipboard);
 
@@ -92,7 +87,7 @@ function setup() {
     testStimRadio.option('Hermann Grid');
     testStimRadio.selected('McCollough');
 
-    nullingSlider = createSlider(0, 1000, 0);
+    nullingSlider = createSlider(-1000, 1000, 0);
 
     setUIVisibility();
 }
@@ -106,13 +101,16 @@ function windowResized() {
 
 function draw() {
     background(0.8);
-    if (colorChannel !== colorRadioMapper(colorRadio.value())) {
-        updateNullingSlider();
-        colorChannel = colorRadioMapper(colorRadio.value());
-    }
-    if (vhChannel !== vhRadioMapper(vhRadio.value())) {
+    if (vhChannel !== vhRadioMapper(vhRadio.value()) || (1<state && state !== prevState)) {
+        if (nullingColors[state - 2][vhRadioMapper(vhRadio.value())][0] === 1) {
+            rgState = nullingColors[state - 2][vhRadioMapper(vhRadio.value())][1];
+        }
+        else if (nullingColors[state - 2][vhRadioMapper(vhRadio.value())][0] === 1 / 3) {
+            rgState = -nullingColors[state - 2][vhRadioMapper(vhRadio.value())][1];
+        }
         updateNullingSlider();
         vhChannel = vhRadioMapper(vhRadio.value());
+        prevState = state;
     }
     if (state == 0) {
         drawSettingsUI();
@@ -163,12 +161,14 @@ function draw() {
 
     }
     if (keyIsPressed) {
-        if (modifyColor && key == 'w') {
-            changeColor(255 / 50000);
+        if (modifyColor && (key == 'r' || key == 'G')) {
+            changeRGState(255 / 50000);
+            mapRGStateToColors()
             updateNullingSlider();
         }
-        if (modifyColor && key == 'q') {
-            changeColor(-255 / 50000);
+        if (modifyColor && (key == 'g' || key == 'G')) {
+            changeRGState(-255 / 50000);
+            mapRGStateToColors()
             updateNullingSlider();
         }
     }
@@ -179,39 +179,37 @@ function draw() {
 }
 
 function updateNullingSlider() {
-    var val = 1000 * nullingColors[state-2][vhRadioMapper(vhRadio.value())][colorRadioMapper(colorRadio.value())] + 0.0;
+    var val = 1000 * rgState;
     nullingSlider.value(val);
 }
 
 function handleNullingSlider() {
-    nullingColors[state-2][vhRadioMapper(vhRadio.value())][colorRadioMapper(colorRadio.value())] = nullingSlider.value()/1000;
+    rgState = nullingSlider.value() / 1000;
+    mapRGStateToColors()
 }
 
 function drawTestStimUI() {
     if (modifyColor) {
-        vhRadio.position(width * 0.19 - round(width * 1.1 / 7), height * 0.1);
+        vhRadio.position(width * 0.19 - round(width * 1.1 / 7), height * 0.11);
         vhRadio.style('width', round(width * 2.5 / 7) + 'px');
         vhRadio.style('font-family', 'Arial');
         vhRadio.style('font-size', round(width * 0.14 / 7) + 'px');
 
-        colorRadio.position(width * 0.19 - round(width * 1.1 / 7), height * 0.14);
-        colorRadio.style('width', round(width * 5 / 7) + 'px');
-        colorRadio.style('font-family', 'Arial');
-        colorRadio.style('font-size', round(width * 0.14 / 7) + 'px');
-
-        nullingSlider.position(width * 0.19 - round(width * 1.1 / 7), height * 0.18);
-        nullingSlider.style('width', round(width * 2.85 / 7) + 'px');
+        nullingSlider.position(width * 0.25 - round(width * 1.1 / 7), height * 0.16);
+        nullingSlider.style('width', round(width * 2.5 / 7) + 'px');
 
         textSize(round(width * 0.14 / 7));
         fill(0);
-        text("press C to hide\t|\tpress R to reset", width * 0.015, height * 0.04);
-        fill(0);
-        text("select option and use Q and W or slider to set nulling color:", width * 0.015, height * 0.085);
+        text("press C to hide\t|\tpress S to reset", width * 0.015, height * 0.04);
+        text("select option and use G and R or slider to set nulling color:", width * 0.015, height * 0.085);
+        text("GREEN",width * 0.0195, height * 0.185);
+        text("RED",width * 0.455, height * 0.185);
 
         textAlign(CENTER);
         text("vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0]).toString("#rrggbb"), width * 0.77, height * 0.085);
         text("horizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][1]).toString("#rrggbb"), width * 0.77, height * (0.085 + 1 * 0.04));
         textAlign(LEFT);
+        noFill();
         clipboardButton.position(width * 0.77 - round(width * 0.55 / 8), height * (0.085 + 2 * 0.04) - round(width * 0.13 / 8));
     }
     else {
@@ -310,39 +308,28 @@ function vhRadioMapper(val) {
     }
 }
 
-function colorRadioMapper(val) {
-    if (val == 'hue') {
-        return 0;
-    }
-    else if (val == 'saturation') {
-        return 1;
-    }
-    else if (val == 'brightness') {
-        return 2;
-    }
-    else if (val == 'red') {
-        return 3;
-    }
-    else if (val == 'green') {
-        return 4;
-    }
-    else if (val == 'blue') {
-        return 5;
-    }
-}
-
 function resetNullingColors() {
-    nullingColors = [[[1/3,0,1],[1,0,1]],[[1/3,0,1],[1,0,1]]];
+    nullingColors = [[[1 / 3, 0, 1], [1, 0, 1]], [[1 / 3, 0, 1], [1, 0, 1]]];
+    rgState = 0;
 
-    if(0<frameCount){
+    if (0 < frameCount) {
         updateNullingSlider();
     }
 }
 
-function changeColor(change) {
-    var vhVal = vhRadioMapper(vhRadio.value());
-    var colorVal = colorRadioMapper(colorRadio.value());
-    nullingColors[state-2][vhVal][colorVal] = constrain(nullingColors[state-2][vhVal][colorVal]+change,0,1);
+function changeRGState(change) {
+    rgState = constrain(rgState + change, -1, 1);
+}
+
+function mapRGStateToColors() {
+    if (rgState < 0) {
+        nullingColors[state - 2][vhRadioMapper(vhRadio.value())][0] = 1 / 3;
+        nullingColors[state - 2][vhRadioMapper(vhRadio.value())][1] = abs(rgState);
+    }
+    else {
+        nullingColors[state - 2][vhRadioMapper(vhRadio.value())][0] = 1;
+        nullingColors[state - 2][vhRadioMapper(vhRadio.value())][1] = rgState;
+    }
 }
 
 function arrayToHSBColor(arr) {
@@ -420,7 +407,7 @@ function keyPressed() {
         if (key == 'c' || key == 'C') {
             modifyColor = !modifyColor;
         }
-        if (key == 'r' || key == 'R') {
+        if (key == 's' || key == 'S') {
             resetNullingColors();
         }
     }
@@ -448,13 +435,11 @@ function setUIVisibility() {
     if (state == 2 || state == 3) {
         testStimRadio.show();
         if (modifyColor) {
-            colorRadio.show();
             nullingSlider.show();
             vhRadio.show();
             clipboardButton.show();
         }
         else {
-            colorRadio.hide();
             nullingSlider.hide();
             vhRadio.hide();
             clipboardButton.hide();
@@ -462,7 +447,6 @@ function setUIVisibility() {
     }
     else {
         testStimRadio.hide();
-        colorRadio.hide();
         nullingSlider.hide();
         vhRadio.hide();
         clipboardButton.hide();
