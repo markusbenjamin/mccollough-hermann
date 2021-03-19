@@ -100,7 +100,7 @@ function windowResized() {
 }
 
 function draw() {
-    background(0.8);
+    background(0);
     if (vhChannel !== vhRadioMapper(vhRadio.value()) || (1 < state && state !== prevState)) {
         if (nullingColors[state - 2][vhRadioMapper(vhRadio.value())][0] === 1) {
             rgState = nullingColors[state - 2][vhRadioMapper(vhRadio.value())][1];
@@ -160,7 +160,7 @@ function draw() {
         handleNullingSlider();
 
     }
-    if (keyIsPressed) {
+    /*if (keyIsPressed) {
         if (modifyColor && (key == 'r' || key == 'G')) {
             changeRGState(255 / 50000);
             mapRGStateToColors()
@@ -171,7 +171,7 @@ function draw() {
             mapRGStateToColors()
             updateNullingSlider();
         }
-    }
+    }*/
     if (controlFlow() === false) {
         updateNullingSlider();
     }
@@ -193,13 +193,14 @@ function drawTestStimUI() {
         vhRadio.position(width * 0.19 - round(width * 1.1 / 7), height * 0.11);
         vhRadio.style('width', round(width * 2.5 / 7) + 'px');
         vhRadio.style('font-family', 'Arial');
+        vhRadio.style('color', '#ffffff');
         vhRadio.style('font-size', round(width * 0.14 / 7) + 'px');
 
         nullingSlider.position(width * 0.25 - round(width * 1.1 / 7), height * 0.16);
         nullingSlider.style('width', round(width * 2.5 / 7) + 'px');
 
         textSize(round(width * 0.14 / 7));
-        fill(0);
+        fill(1);
         text("press C to hide\t|\tpress S to reset", width * 0.015, height * 0.04);
         text("select option and use G and R or slider to set nulling color:", width * 0.015, height * 0.085);
         text("GREEN", width * 0.0195, height * 0.185);
@@ -213,22 +214,22 @@ function drawTestStimUI() {
         clipboardButton.position(width * 0.77 - round(width * 0.55 / 8), height * (0.085 + 2 * 0.04) - round(width * 0.13 / 8));
     }
     else {
-        fill(0);
+        fill(1);
         textSize(round(width * 0.14 / 7));
         text("press C for nulling setting", width * 0.015, height * 0.04);
     }
     testStimRadio.style('width', round(width * 3 / 7) + 'px');
-    fill(0);
+    fill(1);
     testStimRadio.position(width * 0.19 - round(width * 1.1 / 7), height * 0.955);
     text("test stimulus: ", width * 0.015, height * 0.935);
     testStimRadio.style('font-family', 'Arial');
+    testStimRadio.style('color', '#ffffff');
     testStimRadio.style('font-size', round(width * 0.14 / 7) + 'px');
 }
 
 function drawSettingsUI() {
     textAlign(CENTER);
-    background(0.8);
-    fill(0);
+    fill(1);
     textSize(round(width * 0.35 / 7));
     text("Experiment settings", width * 0.5, height * 0.1);
 
@@ -238,14 +239,14 @@ function drawSettingsUI() {
     mcWidthSlider.position(width * 0.15, height * 0.25);
     drawMcColloughStimulus(color(1), round(width * 2 / 7), mcLineNum, width * 0.15 + round(width * 1 / 7), height * 0.5, 1, mcWidthFactor);
 
-    fill(0);
+    fill(1);
     textSize(round(width * 0.16 / 7));
     text("Hermann Grid street width:", width * 0.45 + round(width * 1.8 / 7), height * 0.24);
     hgWidthSlider.style('width', round(width * 2 / 7) + 'px');
     hgWidthSlider.position(width * 0.85 - round(width * 2 / 7), height * 0.25);
     drawHermannGrid(hgBlockNum, hgWidthFactor, round(width * 2 / 7), 1, 1, width * 0.85 - round(width * 1 / 7), height * 0.5);
 
-    fill(0);
+    fill(1);
     textSize(round(width * 0.13 / 7));
     text("Subject:", width * 0.23, height * 0.815);
     text("H/V switch time (ms):", width * 0.5, height * 0.815);
@@ -310,7 +311,7 @@ function vhRadioMapper(val) {
 
 function resetNullingColors() {
     if (1 < state) {
-        nullingColors[state-2] = [[1 / 3, 0, 1], [1, 0, 1]];
+        nullingColors[state - 2] = [[1 / 3, 0, 1], [1, 0, 1]];
     }
     else {
         nullingColors = [[[1 / 3, 0, 1], [1, 0, 1]], [[1 / 3, 0, 1], [1, 0, 1]]];
@@ -415,6 +416,17 @@ function keyPressed() {
         if (key == 's' || key == 'S') {
             resetNullingColors();
         }
+    }
+
+    if (modifyColor && (key == 'r' || key == 'G')) {
+        changeRGState(255 / 50000);
+        mapRGStateToColors()
+        updateNullingSlider();
+    }
+    if (modifyColor && (key == 'g' || key == 'G')) {
+        changeRGState(-255 / 50000);
+        mapRGStateToColors()
+        updateNullingSlider();
     }
 }
 
