@@ -20,6 +20,7 @@ var mask;
 var timestamp;
 var vhRadio;
 var testStimRadio;
+var partialRadio;
 var clipboardButton;
 var subjectInput;
 var switchTimeInput;
@@ -27,6 +28,14 @@ var adaptTimeInput;
 var startButton;
 var colorChannel;
 var vhChannel;
+var partialCheckbox;
+var partialColoring;
+var partialSelect;
+var illusionStrengthColor;
+var illusionStrength;
+var illusionStrengthRadio;
+var illusionStrengthSlider;
+var illusionStrengthRegion;
 
 var state;
 var prevState;
@@ -60,6 +69,8 @@ function setup() {
     adapt = true;
     mask = false;
     adaptCounter = 0;
+    illusionStrengthColor = color(1, 0.09, 1);
+    illusionStrength = [0.5, 0.5];
 
     state = 0;
     prevState = state;
@@ -73,6 +84,14 @@ function setup() {
     startButton = createButton('Start!');
     startButton.mousePressed(startExperiment);
 
+    partialCheckbox = createCheckbox('Partial coloring?', false);
+    partialCheckbox.changed(partialCheckboxEvent);
+    partialColoring = false;
+
+    setUIVisibility();
+}
+
+function createTestStimUI() {
     vhRadio = createRadio('vhRadio');
     vhRadio.option('vertical');
     vhRadio.option('horizontal');
@@ -80,16 +99,33 @@ function setup() {
     vhChannel = 0;
 
     clipboardButton = createButton('Copy to clipboard');
-    clipboardButton.mousePressed(nullingsToClipboard);
+    clipboardButton.mousePressed(dataToClipboard);
+
+    partialRadio = createRadio('partialRadio');
+    partialRadio.option('3/4');
+    partialRadio.option('1/4');
+    partialRadio.selected('3/4');
+    partialSelect = 0;
 
     testStimRadio = createRadio('testStimRadio');
     testStimRadio.option('McCollough');
-    testStimRadio.option('Hermann Grid');
+    if (partialColoring) {
+        testStimRadio.option('Illusion strength');
+    }
+    else {
+        testStimRadio.option('Hermann Grid');
+    }
     testStimRadio.selected('McCollough');
 
-    nullingSlider = createSlider(-1000, 1000, 0);
+    illusionStrengthRadio = createRadio('illusionStrengthRadio');
+    illusionStrengthRadio.option('3/4');
+    illusionStrengthRadio.option('1/4');
+    illusionStrengthRadio.selected('3/4');
+    illusionStrengthRegion = 0;
 
-    setUIVisibility();
+    illusionStrengthSlider = createSlider(0, 1000, 500);
+
+    nullingSlider = createSlider(-1000, 1000, 0);
 }
 
 function windowResized() {
@@ -101,16 +137,30 @@ function windowResized() {
 
 function draw() {
     background(0);
-    if (vhChannel !== vhRadioMapper(vhRadio.value()) || (1 < state && state !== prevState)) {
-        if (nullingColors[state - 2][vhRadioMapper(vhRadio.value())][0] === 1) {
-            rgState = nullingColors[state - 2][vhRadioMapper(vhRadio.value())][1];
+    if (state != 0) {
+        if (partialSelect !== partialRadioMapper(partialRadio.value()) || vhChannel !== vhRadioMapper(vhRadio.value()) || (1 < state && state !== prevState)) {
+            var stateMappedToNullingColorsArray = state - 2;
+            if (state == 4) {
+                stateMappedToNullingColorsArray = 1;
+            }
+            if (nullingColors[stateMappedToNullingColorsArray][vhRadioMapper(vhRadio.value())][partialRadioMapper(partialRadio.value())][0] === 1) {
+                rgState = nullingColors[stateMappedToNullingColorsArray][vhRadioMapper(vhRadio.value())][partialRadioMapper(partialRadio.value())][1];
+            }
+            else if (nullingColors[stateMappedToNullingColorsArray][vhRadioMapper(vhRadio.value())][partialRadioMapper(partialRadio.value())][0] === 1 / 3) {
+                rgState = -nullingColors[stateMappedToNullingColorsArray][vhRadioMapper(vhRadio.value())][partialRadioMapper(partialRadio.value())][1];
+            }
+
+            updateNullingSlider();
+            vhChannel = vhRadioMapper(vhRadio.value());
+            partialSelect = partialRadioMapper(partialRadio.value());
+            prevState = state;
         }
-        else if (nullingColors[state - 2][vhRadioMapper(vhRadio.value())][0] === 1 / 3) {
-            rgState = -nullingColors[state - 2][vhRadioMapper(vhRadio.value())][1];
+        if (state == 4) {
+            if (illusionStrengthRegion != illusionStrengthRadioMapper(illusionStrengthRadio.value())) {
+                updateIllusionStrengthSlider();
+                illusionStrengthRegion = illusionStrengthRadioMapper(illusionStrengthRadio.value());
+            }
         }
-        updateNullingSlider();
-        vhChannel = vhRadioMapper(vhRadio.value());
-        prevState = state;
     }
     if (state == 0) {
         drawSettingsUI();
@@ -120,7 +170,7 @@ function draw() {
         if (adapt) {
             if (millis() - timestamp < switchTime) {
                 var flicker = (adaptCounter / 2) % 2;
-                drawMcColloughStimulus(adaptColors[flicker], stimSize, mcLineNum, stimX, stimY, flicker, mcWidthFactor);
+                drawMcColloughStimulus(adaptColors[flicker], color(1), stimSize, mcLineNum, stimX, stimY, flicker, mcWidthFactor, partialColoring);
             }
             else {
                 adapt = false;
@@ -147,7 +197,7 @@ function draw() {
     else if (state == 2) {
         for (var i = -1; i < 2; i += 2) {
             for (var j = -1; j < 2; j += 2) {
-                drawMcColloughStimulus(arrayToHSBColor(nullingColors[0][abs(i - j) / 2]), stimSize * 0.5, mcLineNum, width * 0.5 + i * 1.025 * stimSize / 4, stimY + j * 1.025 * stimSize / 4, abs(i + j) / 2, mcWidthFactor);
+                drawMcColloughStimulus(arrayToHSBColor(nullingColors[0][abs(i - j) / 2][0]), arrayToHSBColor(nullingColors[0][abs(i - j) / 2][1]), stimSize * 0.5, mcLineNum, width * 0.5 + i * 1.025 * stimSize / 4, stimY + j * 1.025 * stimSize / 4, abs(i + j) / 2, mcWidthFactor, partialColoring);
             }
         }
         drawTestStimUI();
@@ -158,20 +208,13 @@ function draw() {
         drawHermannGrid(hgBlockNum, hgWidthFactor, stimSize, arrayToHSBColor(nullingColors[1][0]), arrayToHSBColor(nullingColors[1][1]), stimX, stimY);
         drawTestStimUI();
         handleNullingSlider();
-
     }
-    /*if (keyIsPressed) {
-        if (modifyColor && (key == 'r' || key == 'G')) {
-            changeRGState(255 / 50000);
-            mapRGStateToColors()
-            updateNullingSlider();
-        }
-        if (modifyColor && (key == 'g' || key == 'G')) {
-            changeRGState(-255 / 50000);
-            mapRGStateToColors()
-            updateNullingSlider();
-        }
-    }*/
+    else if (state == 4) {
+        drawHermannGrid(hgBlockNum, hgWidthFactor, stimSize, illusionStrengthColor, color(1), stimX - width * 0.15, stimY);
+        drawIllusionStrengthMeter();
+        drawIllusionStrengthUI();
+        handleIllusionStrengthSlider();
+    }
     if (controlFlow() === false) {
         updateNullingSlider();
     }
@@ -185,16 +228,97 @@ function updateNullingSlider() {
 
 function handleNullingSlider() {
     rgState = nullingSlider.value() / 1000;
-    mapRGStateToColors()
+    mapRGStateToColors();
+}
+
+function drawIllusionStrengthUI() {
+    if (modifyColor) {
+        textSize(round(width * 0.14 / 7));
+        fill(1);
+        text("press C to hide\t|\tpress S to reset", width * 0.015, height * 0.04);
+        text("select region and use D and F or slider to set illusion strength:", width * 0.015, height * 0.085);
+        illusionStrengthRadio.position(width * 0.19 - round(width * 1.1 / 7), height * 0.11);
+        illusionStrengthRadio.style('width', round(width * 2.5 / 7) + 'px');
+        illusionStrengthRadio.style('font-family', 'Arial');
+        illusionStrengthRadio.style('color', '#ffffff');
+        illusionStrengthRadio.style('font-size', round(width * 0.14 / 7) + 'px');
+
+        stroke(color(1, 1, 1));
+        strokeWeight(5);
+        line(stimX - width * 0.15 - width * 0.01, stimY, stimX - width * 0.15 + width * 0.01, stimY);
+        line(stimX - width * 0.15, stimY - width * 0.01, stimX - width * 0.15, stimY + width * 0.01);
+        strokeWeight(1);
+        var hgDims = hermannGridDimensions(hgBlockNum, hgWidthFactor, stimSize);
+        noFill();
+        if (illusionStrengthRadioMapper(illusionStrengthRadio.value()) == 0) {
+            ellipse(stimX - width * 0.15 + hgDims[0] + hgDims[1], stimY - hgDims[0] - hgDims[1], hgDims[1] * 1.1, hgDims[1] * 1.1);
+        }
+        else {
+            ellipse(stimX - width * 0.15 - hgDims[0] - hgDims[1], stimY + hgDims[0] + hgDims[1], hgDims[1] * 1.1, hgDims[1] * 1.1);
+        }
+        illusionStrengthSlider.position(stimX - width * 0.15 - round(width * 1.1 / 7), height * 0.11);
+        illusionStrengthSlider.style('width', round(width * 2.5 / 7) + 'px');
+
+        fill(1);
+        textAlign(CENTER);
+        text("min brightness in 3/4 region: " + illusionStrength[0], width * 0.77, height * 0.085);
+        text("min brightness in 1/4 region: " + illusionStrength[1], width * 0.77, height * (0.085 + 1 * 0.04));
+        textAlign(LEFT);
+        noFill();
+    }
+    else {
+        textSize(round(width * 0.14 / 7));
+        fill(1);
+        text("press C to to set illusion strength", width * 0.015, height * 0.04);
+    }
+    drawCopyButton();
+}
+
+function drawIllusionStrengthMeter() {
+    var illusionSpotSize = 1.5 * round(hermannGridDimensions(hgBlockNum, hgWidthFactor, stimSize)[1]);
+    fill(1);
+    rect(stimX + width * 0.3, stimY, illusionSpotSize * 2, illusionSpotSize * 2);
+    noFill();
+    loadPixels();
+    for (var i = -illusionSpotSize / 2; i < illusionSpotSize / 2; i++) {
+        for (var j = -illusionSpotSize / 2; j < illusionSpotSize / 2; j++) {
+            var d = dist(0, 0, i, j) / dist(0, 0, illusionSpotSize / 2, illusionSpotSize / 2);
+            var col = color(1 - illusionMain(d, 0.125, 20, 1, illusionStrength[illusionStrengthRadioMapper(illusionStrengthRadio.value())]));
+            set(stimX + width * 0.3 + i, stimY + j, col);
+        }
+    }
+    updatePixels();
+}
+
+function illusionF(d, hsp, ab) {
+    return 1 / (1 + exp(ab * (d - hsp)));
+}
+
+function illusionG(d, hsp, ab, min, max) {
+    return (illusionF(d, hsp, ab) - illusionF(1, hsp, ab)) * (max - min) / (illusionF(0, hsp, ab) - illusionF(1, hsp, ab)) + min
+}
+
+function illusionMain(d, hsp, ab, min, max) {
+    return 1 - illusionG(d, hsp, ab, min, max);
+}
+
+function drawCopyButton() {
+    clipboardButton.position(width * 0.77 - round(width * 0.55 / 8), height * (0.085 + 2 * 0.04) - round(width * 0.13 / 8));
 }
 
 function drawTestStimUI() {
-    if (modifyColor) {
+    if (modifyColor && 1 < state && state < 4) {
         vhRadio.position(width * 0.19 - round(width * 1.1 / 7), height * 0.11);
         vhRadio.style('width', round(width * 2.5 / 7) + 'px');
         vhRadio.style('font-family', 'Arial');
         vhRadio.style('color', '#ffffff');
         vhRadio.style('font-size', round(width * 0.14 / 7) + 'px');
+
+        partialRadio.position(width * 0.4 - round(width * 1.1 / 7), height * 0.11);
+        partialRadio.style('width', round(width * 2.5 / 7) + 'px');
+        partialRadio.style('font-family', 'Arial');
+        partialRadio.style('color', '#ffffff');
+        partialRadio.style('font-size', round(width * 0.14 / 7) + 'px');
 
         nullingSlider.position(width * 0.25 - round(width * 1.1 / 7), height * 0.16);
         nullingSlider.style('width', round(width * 2.5 / 7) + 'px');
@@ -207,11 +331,17 @@ function drawTestStimUI() {
         text("RED", width * 0.455, height * 0.185);
 
         textAlign(CENTER);
-        text("vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0]).toString("#rrggbb"), width * 0.77, height * 0.085);
-        text("horizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][1]).toString("#rrggbb"), width * 0.77, height * (0.085 + 1 * 0.04));
+        if (partialColoring) {
+            text("vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (3/4), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (1/4)", width * 0.77, height * 0.085);
+            text("horizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (3/4), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (1/4)", width * 0.77, height * (0.085 + 1 * 0.04));
+        }
+        else {
+            text("vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb"), width * 0.77, height * 0.085);
+            text("horizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb"), width * 0.77, height * (0.085 + 1 * 0.04));
+        }
         textAlign(LEFT);
         noFill();
-        clipboardButton.position(width * 0.77 - round(width * 0.55 / 8), height * (0.085 + 2 * 0.04) - round(width * 0.13 / 8));
+        drawCopyButton();
     }
     else {
         fill(1);
@@ -221,7 +351,9 @@ function drawTestStimUI() {
     testStimRadio.style('width', round(width * 3 / 7) + 'px');
     fill(1);
     testStimRadio.position(width * 0.19 - round(width * 1.1 / 7), height * 0.955);
-    text("test stimulus: ", width * 0.015, height * 0.935);
+    if (partialColoring == false) {
+        text("test stimulus: ", width * 0.015, height * 0.935);
+    }
     testStimRadio.style('font-family', 'Arial');
     testStimRadio.style('color', '#ffffff');
     testStimRadio.style('font-size', round(width * 0.14 / 7) + 'px');
@@ -237,7 +369,7 @@ function drawSettingsUI() {
     text("McCollough street width:", width * 0.15 + round(width * 1 / 7), height * 0.24);
     mcWidthSlider.style('width', round(width * 2 / 7) + 'px');
     mcWidthSlider.position(width * 0.15, height * 0.25);
-    drawMcColloughStimulus(color(1), round(width * 2 / 7), mcLineNum, width * 0.15 + round(width * 1 / 7), height * 0.5, 1, mcWidthFactor);
+    drawMcColloughStimulus(color(1), color(1), round(width * 2 / 7), mcLineNum, width * 0.15 + round(width * 1 / 7), height * 0.5, 1, mcWidthFactor, false);
 
     fill(1);
     textSize(round(width * 0.16 / 7));
@@ -262,11 +394,17 @@ function drawSettingsUI() {
     startButton.style("height", height * 0.05 + "px");
     startButton.position(width * 0.5 - width * 0.2 * 0.47, height * 0.91);
 
+    partialCheckbox.position(width * 0.15, height * 0.91);
+    partialCheckbox.style('font-family', 'Arial');
+    partialCheckbox.style('color', '#ffffff');
+    partialCheckbox.style('font-size', round(width * 0.14 / 7) + 'px');
+
     textAlign(LEFT);
 }
 
 function startExperiment() {
-    setParameters();
+    setTextInputParameters();
+    createTestStimUI();
     expStartTime = millis();
     timestamp = expStartTime;
     state = 1;
@@ -275,12 +413,22 @@ function startExperiment() {
 function controlFlow() {
     prevState = state;
     if (millis() - expStartTime > adaptTime * 60 * 1000) {
-        state = testStimRadioMapper(testStimRadio.value()) + 2;
+        if (partialColoring) {
+            if (testStimRadioMapper(testStimRadio.value()) == 0) {
+                state = 2;
+            }
+            else {
+                state = 4;
+            }
+        }
+        else {
+            state = testStimRadioMapper(testStimRadio.value()) + 2;
+        }
     }
     return state === prevState;
 }
 
-function setParameters() {
+function setTextInputParameters() {
     subject = subjectInput.value();
     switchTime = switchTimeInput.value();
     adaptTime = adaptTimeInput.value();
@@ -291,11 +439,20 @@ function handleWidthSliders() {
     hgWidthFactor = hgWidthSlider.value() / 100;
 }
 
+function partialCheckboxEvent() {
+    if (this.checked) {
+        partialColoring = true;
+    }
+    else {
+        partialColoring = false;
+    }
+}
+
 function testStimRadioMapper(val) {
     if (val == 'McCollough') {
         return 0;
     }
-    else if (val == 'Hermann Grid') {
+    else if (val == 'Hermann Grid' || val == 'Illusion strength') {
         return 1;
     }
 }
@@ -309,12 +466,65 @@ function vhRadioMapper(val) {
     }
 }
 
+function partialRadioMapper(val) {
+    if (val == '3/4') {
+        return 0;
+    }
+    else if (val == '1/4') {
+        return 1;
+    }
+}
+
+function illusionStrengthRadioMapper(val) {
+    if (val == '3/4') {
+        return 0;
+    }
+    else if (val == '1/4') {
+        return 1;
+    }
+}
+
 function resetNullingColors() {
     if (1 < state) {
-        nullingColors[state - 2] = [[1 / 3, 0, 1], [1, 0, 1]];
+        var stateMappedToNullingColorsArray = state - 2;
+        if (state == 4) {
+            stateMappedToNullingColorsArray = 1;
+        }
+        nullingColors[stateMappedToNullingColorsArray] = [
+            [
+                [1 / 3, 0, 1], //3/4
+                [1 / 3, 0, 1]  //1/4
+            ], //vertical
+            [
+                [1, 0, 1],  //3/4
+                [1, 0, 1]  //1/4
+            ] //horizontal
+        ];
     }
     else {
-        nullingColors = [[[1 / 3, 0, 1], [1, 0, 1]], [[1 / 3, 0, 1], [1, 0, 1]]];
+        nullingColors =
+            [
+                [//McC
+                    [
+                        [1 / 3, 0, 1], //3/4
+                        [1 / 3, 0, 1] //1/4
+                    ], //vertical
+                    [
+                        [1, 0, 1], //3/4
+                        [1, 0, 1] //1/4
+                    ] //horizontal
+                ],
+                [//Hermann
+                    [
+                        [1 / 3, 0, 1], //3/4
+                        [1 / 3, 0, 1] //1/4
+                    ], //vertical
+                    [
+                        [1, 0, 1], //3/4
+                        [1, 0, 1] //1/4
+                    ] //horizontal
+                ]
+            ];
     }
     rgState = 0;
 
@@ -323,18 +533,26 @@ function resetNullingColors() {
     }
 }
 
+function resetIllusionStrength() {
+    illusionStrength = [0.5, 0.5];
+}
+
 function changeRGState(change) {
     rgState = constrain(rgState + change, -1, 1);
 }
 
 function mapRGStateToColors() {
+    var stateMappedToNullingColorsArray = state - 2;
+    if (state == 4) {
+        stateMappedToNullingColorsArray = 1;
+    }
     if (rgState < 0) {
-        nullingColors[state - 2][vhRadioMapper(vhRadio.value())][0] = 1 / 3;
-        nullingColors[state - 2][vhRadioMapper(vhRadio.value())][1] = abs(rgState);
+        nullingColors[stateMappedToNullingColorsArray][vhRadioMapper(vhRadio.value())][partialRadioMapper(partialRadio.value())][0] = 1 / 3;
+        nullingColors[stateMappedToNullingColorsArray][vhRadioMapper(vhRadio.value())][partialRadioMapper(partialRadio.value())][1] = abs(rgState);
     }
     else {
-        nullingColors[state - 2][vhRadioMapper(vhRadio.value())][0] = 1;
-        nullingColors[state - 2][vhRadioMapper(vhRadio.value())][1] = rgState;
+        nullingColors[stateMappedToNullingColorsArray][vhRadioMapper(vhRadio.value())][partialRadioMapper(partialRadio.value())][0] = 1;
+        nullingColors[stateMappedToNullingColorsArray][vhRadioMapper(vhRadio.value())][partialRadioMapper(partialRadio.value())][1] = rgState;
     }
 }
 
@@ -345,9 +563,18 @@ function arrayToHSBColor(arr) {
     return col;
 }
 
-function drawMcColloughStimulus(c, s, n, x, y, o, wF) {
-    fill(c);
-    rect(x, y, s, s);
+function drawMcColloughStimulus(c, partialC, s, n, x, y, o, wF, partial) {
+    if (partial) {
+        fill(partialC);
+        rect(x, y, s, s);
+        fill(c);
+        rect(x, y - s / 4, s, s / 2);
+        rect(x + s / 4, y + s / 4, s / 2, s / 2);
+    }
+    else {
+        fill(c);
+        rect(x, y, s, s);
+    }
 
     var counter = 1;
     fill(0);
@@ -355,7 +582,6 @@ function drawMcColloughStimulus(c, s, n, x, y, o, wF) {
     for (var i = 1; i < n * 2; i += 1) {
         if (i % 2 == 1) {
             if (counter % 2 == 1) {
-
                 if (o) {
                     rect(x + map(i, 0, n * 2, -s / 2, s / 2), y, wF * s / n, s);
                 }
@@ -368,6 +594,13 @@ function drawMcColloughStimulus(c, s, n, x, y, o, wF) {
     }
     noFill();
     noStroke();
+}
+
+function hermannGridDimensions(n, r, gS) {
+    var sW = (r / (1 + r)) * (1 / n);
+    var bW = (1 / (1 + r)) * (1 / n);
+    var shrink = 1 / ((n + 1) * sW + n * bW);
+    return [gS * shrink * sW, gS * shrink * bW];
 }
 
 function drawHermannGrid(n, r, gS, vC, hC, x, y) {
@@ -414,31 +647,60 @@ function keyPressed() {
             modifyColor = !modifyColor;
         }
         if (key == 's' || key == 'S') {
-            resetNullingColors();
+            if (state == 2 || state == 3) {
+                resetNullingColors();
+            }
+            else if (state == 4) {
+                resetIllusionStrength();
+            }
         }
     }
 
-    if (modifyColor && (key == 'r' || key == 'G')) {
-        changeRGState(255 / 50000);
-        mapRGStateToColors()
-        updateNullingSlider();
+    if (modifyColor) {
+        if (1 < state && state < 4 && (key == 'r' || key == 'G')) {
+            changeRGState(255 / 50000);
+            mapRGStateToColors();
+            updateNullingSlider();
+        }
+        if (1 < state && state < 4 && (key == 'g' || key == 'G')) {
+            changeRGState(-255 / 50000);
+            mapRGStateToColors();
+            updateNullingSlider();
+        }
+
+        if (state == 4 && (key == 'd' || key == 'D')) {
+            changeIllusionStrength(-1 / 250);
+            updateIllusionStrengthSlider()
+        }
+        if (state == 4 && (key == 'f' || key == 'F')) {
+            changeIllusionStrength(1 / 250);
+            updateIllusionStrengthSlider();
+        }
     }
-    if (modifyColor && (key == 'g' || key == 'G')) {
-        changeRGState(-255 / 50000);
-        mapRGStateToColors()
-        updateNullingSlider();
-    }
+}
+
+function changeIllusionStrength(change) {
+    illusionStrength[illusionStrengthRadioMapper(illusionStrengthRadio.value())] = constrain(illusionStrength[illusionStrengthRadioMapper(illusionStrengthRadio.value())] + change, 0, 1);
+}
+
+function updateIllusionStrengthSlider() {
+    var val = 1000 * illusionStrength[illusionStrengthRadioMapper(illusionStrengthRadio.value())];
+    illusionStrengthSlider.value(val);
+}
+
+function handleIllusionStrengthSlider() {
+    illusionStrength[illusionStrengthRadioMapper(illusionStrengthRadio.value())] = illusionStrengthSlider.value() / 1000;
 }
 
 function setUIVisibility() {
     if (state == 0) {
         mcWidthSlider.show();
         hgWidthSlider.show();
-        nullingSlider.hide();
         subjectInput.show();
         switchTimeInput.show();
         adaptTimeInput.show();
         startButton.show();
+        partialCheckbox.show();
     }
     else {
         mcWidthSlider.hide();
@@ -447,30 +709,53 @@ function setUIVisibility() {
         switchTimeInput.hide();
         adaptTimeInput.hide();
         startButton.hide();
+        partialCheckbox.hide();
+        illusionStrengthRadio.hide();
+        illusionStrengthSlider.hide();
     }
 
-    if (state == 2 || state == 3) {
+    if (state == 2 || state == 3 || state == 4) {
         testStimRadio.show();
         if (modifyColor) {
+            clipboardButton.show();
+        }
+        else {
+            clipboardButton.hide();
+        }
+
+        if (modifyColor && 1 < state && state < 4) {
             nullingSlider.show();
             vhRadio.show();
-            clipboardButton.show();
+            illusionStrengthRadio.hide();
+            illusionStrengthSlider.hide();
+            if (partialColoring) {
+                partialRadio.show();
+            }
         }
         else {
             nullingSlider.hide();
             vhRadio.hide();
-            clipboardButton.hide();
+            partialRadio.hide();
+            illusionStrengthRadio.hide();
+            illusionStrengthSlider.hide();
+        }
+        if (modifyColor && state == 4) {
+            illusionStrengthRadio.show();
+            illusionStrengthSlider.show();
         }
     }
-    else {
+    else if (state != 0) {
         testStimRadio.hide();
         nullingSlider.hide();
         vhRadio.hide();
+        partialRadio.hide();
         clipboardButton.hide();
+        illusionStrengthRadio.hide();
     }
 }
 
-function nullingsToClipboard() {
+function dataToClipboard() {
+    var stateMappedToNullingColorsArray = state - 2;
     var stateName = "null";
     if (state == 2) {
         stateName = "McCollough";
@@ -478,10 +763,31 @@ function nullingsToClipboard() {
     else if (state == 3) {
         stateName = "Hermann Grid";
     }
-    var nullings =
-        "vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0]).toString("#rrggbb") +
-        "\nhorizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][1]).toString("#rrggbb");
-    copyToClipboard("Subject: " + subject + "\n" + stateName + "\n" + nullings);
+    else if (state == 4) {
+        stateName = "Illusion strength"
+        stateMappedToNullingColorsArray = 1;
+    }
+    if (partialColoring) {
+        if (state == 2) {
+            var nullings =
+                "vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (3/4), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (1/4)" +
+                "\nhorizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (3/4), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (1/4)";
+            copyToClipboard("Subject: " + subject + "\nadaptation length:" + adaptTime + " mins" + "\n" + stateName + "\n" + nullings);
+        }
+        if(state == 4) {
+            console.log("fasz");
+            var illusionStrengthText =
+                "min brightness in 3/4 region: " + illusionStrength[0] +
+                "\nmin brightness in 1/4 region: " + illusionStrength[1];
+            copyToClipboard("Subject: " + subject + "\nadaptation length:" + adaptTime + " mins" + "\n" + stateName + "\n" + illusionStrengthText);
+        }
+    }
+    else {
+        var nullings =
+            "vertical nulling in hex: " + arrayToHSBColor(nullingColors[stateMappedToNullingColorsArray][0]).toString("#rrggbb") +
+            "\nhorizontal nulling in hex: " + arrayToHSBColor(nullingColors[stateMappedToNullingColorsArray][1]).toString("#rrggbb");
+        copyToClipboard("Subject: " + subject + "\nadaptation length:" + adaptTime + " mins" + "\n" + stateName + "\n" + nullings);
+    }
 }
 
 function copyToClipboard(text) {
