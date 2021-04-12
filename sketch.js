@@ -62,7 +62,7 @@ function setup() {
     stimSize = min(width, height) * 0.7;
     mcLineNum = 21;
     hgWidthFactor = 0.251;
-    hgBlockNum = 6;
+    hgBlockNum = 7;
     adaptColors = [color(1, 1, 1), color(1 / 3, 1, 1)];
     resetNullingColors();
     modifyColor = false;
@@ -102,9 +102,9 @@ function createTestStimUI() {
     clipboardButton.mousePressed(dataToClipboard);
 
     partialRadio = createRadio('partialRadio');
-    partialRadio.option('3/4');
-    partialRadio.option('1/4');
-    partialRadio.selected('3/4');
+    partialRadio.option('col');
+    partialRadio.option('no col');
+    partialRadio.selected('col');
     partialSelect = 0;
 
     testStimRadio = createRadio('testStimRadio');
@@ -118,9 +118,9 @@ function createTestStimUI() {
     testStimRadio.selected('McCollough');
 
     illusionStrengthRadio = createRadio('illusionStrengthRadio');
-    illusionStrengthRadio.option('3/4');
-    illusionStrengthRadio.option('1/4');
-    illusionStrengthRadio.selected('3/4');
+    illusionStrengthRadio.option('col');
+    illusionStrengthRadio.option('no col');
+    illusionStrengthRadio.selected('col');
     illusionStrengthRegion = 0;
 
     illusionStrengthSlider = createSlider(0, 1000, 500);
@@ -170,7 +170,7 @@ function draw() {
         if (adapt) {
             if (millis() - timestamp < switchTime) {
                 var flicker = (adaptCounter / 2) % 2;
-                drawMcColloughStimulus(adaptColors[flicker], color(1), stimSize, mcLineNum, stimX, stimY, flicker, mcWidthFactor, partialColoring);
+                drawMcColloughStimulus(adaptColors[flicker], color(1), stimSize, mcLineNum, stimX, stimY, flicker, mcWidthFactor, partialColoring,1);
             }
             else {
                 adapt = false;
@@ -197,7 +197,7 @@ function draw() {
     else if (state == 2) {
         for (var i = -1; i < 2; i += 2) {
             for (var j = -1; j < 2; j += 2) {
-                drawMcColloughStimulus(arrayToHSBColor(nullingColors[0][abs(i - j) / 2][0]), arrayToHSBColor(nullingColors[0][abs(i - j) / 2][1]), stimSize * 0.5, mcLineNum, width * 0.5 + i * 1.025 * stimSize / 4, stimY + j * 1.025 * stimSize / 4, abs(i + j) / 2, mcWidthFactor, partialColoring);
+                drawMcColloughStimulus(arrayToHSBColor(nullingColors[0][abs(i - j) / 2][0]), arrayToHSBColor(nullingColors[0][abs(i - j) / 2][1]), stimSize * 0.5, mcLineNum, width * 0.5 + i * 1.025 * stimSize / 4, stimY + j * 1.025 * stimSize / 4, abs(i + j) / 2, mcWidthFactor, partialColoring,0.5);
             }
         }
         drawTestStimUI();
@@ -210,8 +210,7 @@ function draw() {
         handleNullingSlider();
     }
     else if (state == 4) {
-        drawHermannGrid(hgBlockNum, hgWidthFactor, stimSize, illusionStrengthColor, color(1), stimX - width * 0.15, stimY);
-        drawIllusionStrengthMeter();
+        drawHermannGrid(hgBlockNum, hgWidthFactor, stimSize, illusionStrengthColor, color(1), stimX, stimY);
         drawIllusionStrengthUI();
         handleIllusionStrengthSlider();
     }
@@ -245,26 +244,29 @@ function drawIllusionStrengthUI() {
 
         stroke(color(1, 1, 1));
         strokeWeight(5);
-        line(stimX - width * 0.15 - width * 0.01, stimY, stimX - width * 0.15 + width * 0.01, stimY);
-        line(stimX - width * 0.15, stimY - width * 0.01, stimX - width * 0.15, stimY + width * 0.01);
+        line(stimX - width * 0.01, stimY, stimX + width * 0.01, stimY);
+        line(stimX, stimY - width * 0.01, stimX, stimY + width * 0.01);
         strokeWeight(1);
         var hgDims = hermannGridDimensions(hgBlockNum, hgWidthFactor, stimSize);
         noFill();
-        if (illusionStrengthRadioMapper(illusionStrengthRadio.value()) == 0) {
-            ellipse(stimX - width * 0.15 + hgDims[0] + hgDims[1], stimY - hgDims[0] - hgDims[1], hgDims[1] * 1.1, hgDims[1] * 1.1);
-        }
-        else {
-            ellipse(stimX - width * 0.15 - hgDims[0] - hgDims[1], stimY + hgDims[0] + hgDims[1], hgDims[1] * 1.1, hgDims[1] * 1.1);
-        }
-        illusionStrengthSlider.position(stimX - width * 0.15 - round(width * 1.1 / 7), height * 0.11);
+        
+        illusionStrengthSlider.position(stimX - width * 0.15 - round(width * 1.1 / 7), height * 0.115);
         illusionStrengthSlider.style('width', round(width * 2.5 / 7) + 'px');
 
         fill(1);
         textAlign(CENTER);
-        text("min brightness in 3/4 region: " + illusionStrength[0], width * 0.77, height * 0.085);
-        text("min brightness in 1/4 region: " + illusionStrength[1], width * 0.77, height * (0.085 + 1 * 0.04));
+        text("min brightness in col region: " + illusionStrength[0], width * 0.77, height * 0.085);
+        text("min brightness in no col region: " + illusionStrength[1], width * 0.77, height * (0.085 + 1 * 0.04));
         textAlign(LEFT);
         noFill();
+        noStroke();
+        var translate = 1.5*(hgDims[0] + hgDims[1]);
+        if (illusionStrengthRadioMapper(illusionStrengthRadio.value()) != 0) {
+            drawIllusionStrengthMeter(stimX + translate, stimY - translate);
+        }
+        else {
+            drawIllusionStrengthMeter(stimX - translate, stimY + translate);
+        }
     }
     else {
         textSize(round(width * 0.14 / 7));
@@ -274,17 +276,18 @@ function drawIllusionStrengthUI() {
     drawCopyButton();
 }
 
-function drawIllusionStrengthMeter() {
-    var illusionSpotSize = 1.5 * round(hermannGridDimensions(hgBlockNum, hgWidthFactor, stimSize)[1]);
+function drawIllusionStrengthMeter(posX, posY) {
+    var hgDims = hermannGridDimensions(hgBlockNum, hgWidthFactor, stimSize);
+    var illusionSpotSize = round(hermannGridDimensions(hgBlockNum, hgWidthFactor, stimSize)[1]);
     fill(1);
-    rect(stimX + width * 0.3, stimY, illusionSpotSize * 2, illusionSpotSize * 2);
+    rect(posX, posY, 3*hgDims[0]+2*hgDims[1], 3*hgDims[0]+2*hgDims[1]);
     noFill();
     loadPixels();
     for (var i = -illusionSpotSize / 2; i < illusionSpotSize / 2; i++) {
         for (var j = -illusionSpotSize / 2; j < illusionSpotSize / 2; j++) {
             var d = dist(0, 0, i, j) / dist(0, 0, illusionSpotSize / 2, illusionSpotSize / 2);
             var col = color(1 - illusionMain(d, 0.125, 20, 1, illusionStrength[illusionStrengthRadioMapper(illusionStrengthRadio.value())]));
-            set(stimX + width * 0.3 + i, stimY + j, col);
+            set(posX + i, posY + j, col);
         }
     }
     updatePixels();
@@ -332,8 +335,8 @@ function drawTestStimUI() {
 
         textAlign(CENTER);
         if (partialColoring) {
-            text("vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (3/4), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (1/4)", width * 0.77, height * 0.085);
-            text("horizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (3/4), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (1/4)", width * 0.77, height * (0.085 + 1 * 0.04));
+            text("vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (c), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (nc)", width * 0.77, height * 0.085);
+            text("horizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (c), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (nc)", width * 0.77, height * (0.085 + 1 * 0.04));
         }
         else {
             text("vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb"), width * 0.77, height * 0.085);
@@ -369,7 +372,7 @@ function drawSettingsUI() {
     text("McCollough street width:", width * 0.15 + round(width * 1 / 7), height * 0.24);
     mcWidthSlider.style('width', round(width * 2 / 7) + 'px');
     mcWidthSlider.position(width * 0.15, height * 0.25);
-    drawMcColloughStimulus(color(1), color(1), round(width * 2 / 7), mcLineNum, width * 0.15 + round(width * 1 / 7), height * 0.5, 1, mcWidthFactor, false);
+    drawMcColloughStimulus(color(1), color(1), round(width * 2 / 7), mcLineNum, width * 0.15 + round(width * 1 / 7), height * 0.5, 1, mcWidthFactor, false, 1);
 
     fill(1);
     textSize(round(width * 0.16 / 7));
@@ -467,19 +470,19 @@ function vhRadioMapper(val) {
 }
 
 function partialRadioMapper(val) {
-    if (val == '3/4') {
+    if (val == 'col') {
         return 0;
     }
-    else if (val == '1/4') {
+    else if (val == 'no col') {
         return 1;
     }
 }
 
 function illusionStrengthRadioMapper(val) {
-    if (val == '3/4') {
+    if (val == 'col') {
         return 0;
     }
-    else if (val == '1/4') {
+    else if (val == 'no col') {
         return 1;
     }
 }
@@ -563,13 +566,15 @@ function arrayToHSBColor(arr) {
     return col;
 }
 
-function drawMcColloughStimulus(c, partialC, s, n, x, y, o, wF, partial) {
+function drawMcColloughStimulus(c, partialC, s, n, x, y, o, wF, partial, zoom) {
     if (partial) {
-        fill(partialC);
-        rect(x, y, s, s);
+        var hgDims = hermannGridDimensions(hgBlockNum, hgWidthFactor, stimSize);
+        var translate = 1.5*(hgDims[0]+hgDims[1]);
+        var size = 3*hgDims[0]+2*hgDims[1];
         fill(c);
-        rect(x, y - s / 4, s, s / 2);
-        rect(x + s / 4, y + s / 4, s / 2, s / 2);
+        rect(x, y, s, s);
+        fill(partialC);
+        rect(x - zoom*translate*1.1, y + zoom*translate*1.1, zoom*size, zoom*size);
     }
     else {
         fill(c);
@@ -770,15 +775,15 @@ function dataToClipboard() {
     if (partialColoring) {
         if (state == 2) {
             var nullings =
-                "vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (3/4), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (1/4)" +
-                "\nhorizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (3/4), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (1/4)";
+                "vertical nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (c), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (nc)" +
+                "\nhorizontal nulling in hex: " + arrayToHSBColor(nullingColors[state - 2][0][0]).toString("#rrggbb") + " (c), " + arrayToHSBColor(nullingColors[state - 2][0][1]).toString("#rrggbb") + "  (nc)";
             copyToClipboard("Subject: " + subject + "\nadaptation length:" + adaptTime + " mins" + "\n" + stateName + "\n" + nullings);
         }
-        if(state == 4) {
+        if (state == 4) {
             console.log("fasz");
             var illusionStrengthText =
-                "min brightness in 3/4 region: " + illusionStrength[0] +
-                "\nmin brightness in 1/4 region: " + illusionStrength[1];
+                "min brightness in col region: " + illusionStrength[0] +
+                "\nmin brightness in no col region: " + illusionStrength[1];
             copyToClipboard("Subject: " + subject + "\nadaptation length:" + adaptTime + " mins" + "\n" + stateName + "\n" + illusionStrengthText);
         }
     }
