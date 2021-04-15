@@ -69,7 +69,7 @@ function setup() {
     adapt = true;
     mask = false;
     adaptCounter = 0;
-    illusionStrengthColor = color(1, 0.2, 1);
+    illusionStrengthColor = color(1, 0.4, 1);
     illusionStrength = [0.5, 0.5];
 
     state = 0;
