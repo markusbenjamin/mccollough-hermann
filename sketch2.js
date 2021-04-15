@@ -225,6 +225,18 @@ function draw() {
     styleElement(prevButton, width * 0.1, height * 0.08, fontSize);
     nextButton.position(width * 0.97 - width * 0.1, height * 0.88);
     styleElement(nextButton, width * 0.1, height * 0.08, fontSize);
+    if(stage == 0){
+        prevButton.hide();
+    }
+    else{
+        prevButton.show();
+    }
+    if(stage == 9){
+        nextButton.hide();
+    }
+    else{
+        nextButton.show();
+    }
 
     generateReport();
 }
