@@ -14,8 +14,10 @@ var adaptTimeInput;
 
 var prevButton, nextButton;
 
-var stageToValue, measuredValues, ranges;
+var stageToValue, measuredValues, measuredValuesDefault, ranges;
 var sliders;
+
+var resetAll, resetThis;
 
 function setup() {
     aspectRatio = 6 / 8;
@@ -49,6 +51,7 @@ function setParameters() {
     testVersion = 1;
 
     stageToValue = [0, 1, null, null, 2, 3, 4, 5, 6, 7];
+    measuredValuesDefault = [0.5, 0.5, 0, 0, 0, 0, 0.5, 0.5];
     measuredValues = [0.5, 0.5, 0, 0, 0, 0, 0.5, 0.5];
     ranges = [[0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [0, 1], [0, 1]];
 }
@@ -83,6 +86,9 @@ function initialize() {
         sliders[i].hide();
     }
     sliders[stageToValue[stage]].show();
+
+    resetAll = false;
+    resetThis = false;
 }
 
 function calculateSizes() {
@@ -100,12 +106,26 @@ function drawSlider() {
         fill(1);
         textSize(fontSize);
         text("<-- F", width * 0.35, height * 0.08);
+
         text("H -->", width * 0.65, height * 0.08);
+        textSize(fontSize);
+        text("R to reset this", width * 0.5, height * 0.92);
+        text("A to reset all", width * 0.5, height * 0.96);
         noFill();
     }
 }
 
 function draw() {
+    if (resetAll) {
+        for (var i = 0; i < 8; i++) {
+            sliders[i].value(measuredValuesDefault[i]);
+        }
+        resetAll = false;
+    }
+    else if (resetThis && stageToValue[stage] != null) {
+        sliders[stageToValue[stage]].value(measuredValuesDefault[stageToValue[stage]]);
+        resetThis = false;
+    }
     readSliderValue();
     background(0);
     drawSlider();
@@ -176,34 +196,34 @@ function draw() {
             drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
         }
         else {
-            drawMcColloughStimulus(color(1), color(0), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
+            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage]]), color(0), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
         }
     }
     if (stage == 5) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), color(1), stimSize, mcN, stimX, stimY, 0, [4, -4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 0, [4, -4, 5]);
         }
         else {
-            drawMcColloughStimulus(color(0), color(1), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
         }
     }
     if (stage == 6) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), color(1), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
         }
         else {
-            drawMcColloughStimulus(color(1), color(0), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
+            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage]]), color(0), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
         }
     }
     if (stage == 7) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), color(1), stimSize, mcN, stimX, stimY, 1, [4, -4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 1, [4, -4, 5]);
         }
         else {
-            drawMcColloughStimulus(color(0), color(1), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
         }
     }
     if (stage == 8) {
@@ -217,24 +237,20 @@ function draw() {
         drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage]], [1, -1]);
     }
 
-    if (stage != 2 && stage != 3) {
-
-    }
-
     prevButton.position(width * 0.03, height * 0.88);
     styleElement(prevButton, width * 0.1, height * 0.08, fontSize);
     nextButton.position(width * 0.97 - width * 0.1, height * 0.88);
     styleElement(nextButton, width * 0.1, height * 0.08, fontSize);
-    if(stage == 0){
+    if (stage == 0) {
         prevButton.hide();
     }
-    else{
+    else {
         prevButton.show();
     }
-    if(stage == 9){
+    if (stage == 9) {
         nextButton.hide();
     }
-    else{
+    else {
         nextButton.show();
     }
 
@@ -365,6 +381,17 @@ function keyPressed() {
     }
     if (key === 'h' || key === 'H') {
         changeSliderValue(0.001);
+    }
+
+    if (key === 'r' || key === 'R') {
+        if (stageToValue[stage] != null) {
+            resetThis = true;
+        }
+    }
+    if (key === 'a' || key === 'A') {
+        for (var i = 0; i < 8; i++) {
+            resetAll = true;
+        }
     }
 }
 
