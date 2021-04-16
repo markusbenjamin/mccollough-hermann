@@ -12,7 +12,7 @@ var testVersion, testVersionRadio;
 
 var adaptTimeInput;
 
-var prevButton, nextButton;
+var prevButton, nextButton, clipboardButton;
 
 var stageToValue, measuredValues, measuredValuesDefault, ranges;
 var sliders;
@@ -50,21 +50,25 @@ function setParameters() {
     adaptTime = 10;
     testVersion = 1;
 
-    stageToValue = [0, 1, null, null, 2, 3, 4, 5, 6, 7];
-    measuredValuesDefault = [0.5, 0.5, 0, 0, 0, 0, 0.5, 0.5];
-    measuredValues = [0.5, 0.5, 0, 0, 0, 0, 0.5, 0.5];
-    ranges = [[0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [0, 1], [0, 1]];
+    stageToValue = [0, 1, 2, null, null, 3, 4, 5, 6, 7, 8];
+    measuredValuesDefault = [0.5, 0.5, 0.5, 0, 0, 0, 0, 0.5, 0.5];
+    measuredValues = [0.5, 0.5, 0.5, 0, 0, 0, 0, 0.5, 0.5];
+    ranges = [[0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [0, 1], [0, 1]];
 }
 
 function initialize() {
     calculateSizes();
 
-    stage = 0;
+    stage = -1;
 
     prevButton = createButton('Prev stage');
     prevButton.mousePressed(goToPrevStage);
     nextButton = createButton('Next stage');
     nextButton.mousePressed(goToNextStage);
+
+    clipboardButton = createButton('Results to clipboard');
+    clipboardButton.mousePressed(generateReport);
+    clipboardButton.hide();
 
     adaptTimeInput = createInput(adaptTime);
     adaptTimeInput.hide();
@@ -81,11 +85,11 @@ function initialize() {
     testVersionRadio.hide();
 
     sliders = [];
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < measuredValues.length; i++) {
         sliders.push(createSlider(ranges[i][0], ranges[i][1], measuredValues[i], 1 / 1000));
         sliders[i].hide();
     }
-    sliders[stageToValue[stage]].show();
+    sliders[stageToValue[stage + 1]].show();
 
     resetAll = false;
     resetThis = false;
@@ -100,14 +104,14 @@ function calculateSizes() {
 }
 
 function drawSlider() {
-    if (stageToValue[stage] != null) {
-        sliders[stageToValue[stage]].position(width * 0.5 - width * 0.4 * 0.5, height * 0.1);
-        sliders[stageToValue[stage]].style("width", width * 0.4 + "px");
+    if (stageToValue[stage + 1] != null) {
+        sliders[stageToValue[stage + 1]].position(width * 0.5 - width * 0.4 * 0.5, height * 0.1);
+        sliders[stageToValue[stage + 1]].style("width", width * 0.4 + "px");
         fill(1);
         textSize(fontSize);
-        text("<-- F", width * 0.35, height * 0.08);
+        text("<-- F", width * 0.35, height * 0.07);
 
-        text("H -->", width * 0.65, height * 0.08);
+        text("H -->", width * 0.65, height * 0.07);
         textSize(fontSize);
         text("R to reset this", width * 0.5, height * 0.92);
         text("A to reset all", width * 0.5, height * 0.96);
@@ -117,28 +121,33 @@ function drawSlider() {
 
 function draw() {
     if (resetAll) {
-        for (var i = 0; i < 8; i++) {
+        for (var i = 0; i < measuredValues.length; i++) {
             sliders[i].value(measuredValuesDefault[i]);
         }
         resetAll = false;
     }
-    else if (resetThis && stageToValue[stage] != null) {
-        sliders[stageToValue[stage]].value(measuredValuesDefault[stageToValue[stage]]);
+    else if (resetThis && stageToValue[stage + 1] != null) {
+        sliders[stageToValue[stage + 1]].value(measuredValuesDefault[stageToValue[stage + 1]]);
         resetThis = false;
     }
     readSliderValue();
     background(0);
     drawSlider();
 
-    if (stage == 0) {
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY);
+    if (stage == -1) {
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixationCross(stimX, stimY);
-        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage]], [-1, 1]);
+        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [-1, 1]);
+    }
+    if (stage == 0) {
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixationCross(stimX, stimY);
+        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [1, -1]);
     }
     if (stage == 1) {
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY);
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixationCross(stimX, stimY);
-        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage]], [1, -1]);
+        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [-1, 1]);
     }
     if (stage == 2) {
         fill(1);
@@ -193,55 +202,57 @@ function draw() {
     if (stage == 4) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
         }
         else {
-            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage]]), color(0), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
+            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), color(0), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
         }
     }
     if (stage == 5) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 0, [4, -4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 0, [4, -4, 5]);
         }
         else {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
         }
     }
     if (stage == 6) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
         }
         else {
-            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage]]), color(0), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
+            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), color(0), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
         }
     }
     if (stage == 7) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 1, [4, -4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 1, [4, -4, 5]);
         }
         else {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
         }
     }
     if (stage == 8) {
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY);
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixationCross(stimX, stimY);
-        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage]], [-1, 1]);
+        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [-1, 1]);
     }
     if (stage == 9) {
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY);
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixationCross(stimX, stimY);
-        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage]], [1, -1]);
+        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [1, -1]);
     }
 
     prevButton.position(width * 0.03, height * 0.88);
     styleElement(prevButton, width * 0.1, height * 0.08, fontSize);
     nextButton.position(width * 0.97 - width * 0.1, height * 0.88);
     styleElement(nextButton, width * 0.1, height * 0.08, fontSize);
-    if (stage == 0) {
+    clipboardButton.position(width * 0.5 - width * 0.155 * 0.5, height * 0.07 - height * 0.027);
+    styleElement(clipboardButton, width * 0.155, height * 0.035, fontSize * 0.75);
+    if (stage == -1) {
         prevButton.hide();
     }
     else {
@@ -252,6 +263,12 @@ function draw() {
     }
     else {
         nextButton.show();
+    }
+    if (stage != 2 && stage != 3) {
+        clipboardButton.show();
+    }
+    else {
+        clipboardButton.hide();
     }
 
     generateReport();
@@ -295,7 +312,7 @@ function goToPrevStage() {
 }
 
 function changeStage(change) {
-    stage = constrain(stage + change, 0, 9);
+    stage = constrain(stage + change, -1, 9);
     if (stage == 1) {
         adaptTimeInput.hide();
         testVersionRadio.hide();
@@ -330,8 +347,8 @@ function changeStage(change) {
 }
 
 function handleSliderVisibility() {
-    for (var i = 0; i <= 8; i++) {
-        if (i == stageToValue[stage]) {
+    for (var i = 0; i <= 9; i++) {
+        if (i == stageToValue[stage + 1]) {
             sliders[i].show();
         }
         else {
@@ -341,14 +358,14 @@ function handleSliderVisibility() {
 }
 
 function readSliderValue() {
-    if (stageToValue[stage] != null) {
-        measuredValues[stageToValue[stage]] = sliders[stageToValue[stage]].value();
+    if (stageToValue[stage + 1] != null) {
+        measuredValues[stageToValue[stage + 1]] = sliders[stageToValue[stage + 1]].value();
     }
 }
 
 function changeSliderValue(change) {
-    if (stageToValue[stage] != null) {
-        sliders[stageToValue[stage]].value(measuredValues[stageToValue[stage]] + change);
+    if (stageToValue[stage + 1] != null) {
+        sliders[stageToValue[stage + 1]].value(measuredValues[stageToValue[stage + 1]] + change);
     }
 }
 
@@ -377,21 +394,19 @@ function keyPressed() {
     }
 
     if (key === 'f' || key === 'F') {
-        changeSliderValue(-0.001);
+        changeSliderValue(-0.005);
     }
     if (key === 'h' || key === 'H') {
-        changeSliderValue(0.001);
+        changeSliderValue(0.005);
     }
 
     if (key === 'r' || key === 'R') {
-        if (stageToValue[stage] != null) {
+        if (stageToValue[stage + 1] != null) {
             resetThis = true;
         }
     }
     if (key === 'a' || key === 'A') {
-        for (var i = 0; i < 8; i++) {
-            resetAll = true;
-        }
+        resetAll = true;
     }
 }
 
@@ -434,7 +449,7 @@ function hermannGridDimensions(n, r, gS) {
     return [gS * shrink * sW, gS * shrink * bW];
 }
 
-function drawHermannGrid(n, r, gS, vC, hC, x, y) {
+function drawHermannGrid(n, r, gS, vC, hC, x, y, hOnV) {
     var sW = (r / (1 + r)) * (1 / n);
     var bW = (1 / (1 + r)) * (1 / n);
     var shrink = 1 / ((n + 1) * sW + n * bW);
@@ -447,15 +462,17 @@ function drawHermannGrid(n, r, gS, vC, hC, x, y) {
     fill(0);
     rect(x, y, gS, gS);
 
-    fill(vC);
-    stroke(vC);
-    for (var i = 1; i <= n + 1; i++) {
-        beginShape();
-        vertex(x + gS * shrink * (coords[i - 1] + sW / 2), y + gS * shrink * (-0.5 + sW / 2));
-        vertex(x + gS * shrink * (coords[i - 1] - sW / 2), y + gS * shrink * (-0.5 + sW / 2));
-        vertex(x + gS * shrink * (coords[i - 1] - sW / 2), y + gS * shrink * (0.5 + sW / 2));
-        vertex(x + gS * shrink * (coords[i - 1] + sW / 2), y + gS * shrink * (0.5 + sW / 2));
-        endShape(CLOSE);
+    if (hOnV) {
+        fill(vC);
+        stroke(vC);
+        for (var i = 1; i <= n + 1; i++) {
+            beginShape();
+            vertex(x + gS * shrink * (coords[i - 1] + sW / 2), y + gS * shrink * (-0.5 + sW / 2));
+            vertex(x + gS * shrink * (coords[i - 1] - sW / 2), y + gS * shrink * (-0.5 + sW / 2));
+            vertex(x + gS * shrink * (coords[i - 1] - sW / 2), y + gS * shrink * (0.5 + sW / 2));
+            vertex(x + gS * shrink * (coords[i - 1] + sW / 2), y + gS * shrink * (0.5 + sW / 2));
+            endShape(CLOSE);
+        }
     }
 
     fill(hC);
@@ -468,6 +485,20 @@ function drawHermannGrid(n, r, gS, vC, hC, x, y) {
         vertex(x + gS * shrink * (0.5 + sW / 2), y + gS * shrink * (coords[i - 1] - sW / 2));
         endShape(CLOSE);
     }
+
+    if (hOnV == false) {
+        fill(vC);
+        stroke(vC);
+        for (var i = 1; i <= n + 1; i++) {
+            beginShape();
+            vertex(x + gS * shrink * (coords[i - 1] + sW / 2), y + gS * shrink * (-0.5 + sW / 2));
+            vertex(x + gS * shrink * (coords[i - 1] - sW / 2), y + gS * shrink * (-0.5 + sW / 2));
+            vertex(x + gS * shrink * (coords[i - 1] - sW / 2), y + gS * shrink * (0.5 + sW / 2));
+            vertex(x + gS * shrink * (coords[i - 1] + sW / 2), y + gS * shrink * (0.5 + sW / 2));
+            endShape(CLOSE);
+        }
+    }
+
     noFill();
     noStroke();
 }
@@ -508,8 +539,9 @@ function generateReport() {
 
     if (testVersion == 1) {
         valueNames = [
-            'Hermann grid 1 lower left',
-            'Hermann grid 1 upper rigth',
+            'Hermann grid 1 lower left, h on v',
+            'Hermann grid 1 upper rigth, h on v',
+            'Hermann grid 1 lower left, v on h',
             'McCollough version 1 lower left, horizontal',
             'McCollough version 1 upper right, horizontal',
             'McCollough version 1 lower left, vertical',
@@ -520,8 +552,9 @@ function generateReport() {
     }
     else {
         valueNames = [
-            'Hermann grid 1 lower left',
-            'Hermann grid 1 upper rigth',
+            'Hermann grid 1 lower left, h on v',
+            'Hermann grid 1 upper rigth, h on v',
+            'Hermann grid 1 lower left, v on h',
             'McCollough version 2 large, horizontal',
             'McCollough version 2 small, horizontal',
             'McCollough version 2 large, vertical',
@@ -531,7 +564,7 @@ function generateReport() {
         ];
     }
     var reportString = 'adaptation: ' + adaptTime + ' min \n';
-    for (var i = 0; i < 8; i++) {
+    for (var i = 0; i < measuredValues.length; i++) {
         reportString += valueNames[i] + ": " + measuredValues[i] + "\n";
     }
     copyToClipboard(reportString);
