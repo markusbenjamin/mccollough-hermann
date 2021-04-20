@@ -5,10 +5,12 @@ var fontSize;
 
 var hgN, hgR, hgVC;
 var mcN;
-var adaptColors;
+var adaptColors, nonadaptColors;
 var adapt, mask;
 var adaptTime, switchTime, adaptCounter, timestamp, adaptStartTime;
 var testVersion, testVersionRadio;
+var testOrder, testOrderRadio;
+var nonadaptColor, nonadaptColorRadio;
 
 var adaptTimeInput;
 
@@ -44,11 +46,14 @@ function setParameters() {
 
     mcN = 17;
     adaptColors = [color(1 / 3, 1, 1), color(1, 1, 1)];
+    nonadaptColors = [color(1), color(0)];
 
     switchTime = 2000;
     maskTime = 500;
     adaptTime = 10;
     testVersion = 1;
+    testOrder = 0;
+    nonadaptColor = 0;
 
     stageToValue = [0, 1, 2, null, null, 3, 4, 5, 6, 7, 8];
     measuredValuesDefault = [0.5, 0.5, 0.5, 0, 0, 0, 0, 0.5, 0.5];
@@ -83,6 +88,28 @@ function initialize() {
         testVersionRadio.selected('2');
     }
     testVersionRadio.hide();
+
+    testOrderRadio = createRadio('testOrderRadio');
+    testOrderRadio.option('h, v');
+    testOrderRadio.option('v, h');
+    if (testOrder == 0) {
+        testOrderRadio.selected('h, v');
+    }
+    else {
+        testOrderRadio.selected('v, h');
+    }
+    testOrderRadio.hide();
+
+    nonadaptColorRadio = createRadio('nonadaptColorRadio');
+    nonadaptColorRadio.option('white');
+    nonadaptColorRadio.option('black');
+    if (nonadaptColor == 0) {
+        nonadaptColorRadio.selected('white');
+    }
+    else {
+        nonadaptColorRadio.selected('black');
+    }
+    nonadaptColorRadio.hide();
 
     sliders = [];
     for (var i = 0; i < measuredValues.length; i++) {
@@ -156,15 +183,26 @@ function draw() {
 
         textAlign(LEFT);
         textSize(fontSize * 1.5);
-        text("adaptation time:", width * 0.3, height * 0.375);
-        adaptTimeInput.position(width * 0.5 - width * 0.1, height * 0.4);
+        text("adaptation time:", width * 0.3, height * 0.3);
+        adaptTimeInput.position(width * 0.5 - width * 0.1, height * 0.325);
         styleElement(adaptTimeInput, width * 0.2, height * 0.05, fontSize * 1.5);
 
-        text("test version:", width * 0.3, height * 0.575);
-        textAlign(CENTER);
-        testVersionRadio.position(width * 0.5 - width * 0.05, height * 0.6);
+        text("non-adapt color:", width * 0.3, height * 0.45);
+        nonadaptColorRadio.position(width * 0.5 - width * 0.05, height * 0.475);
+        styleElement(nonadaptColorRadio, width * 0.2, height * 0.05, fontSize * 1.5);
+        nonadaptColorRadio.style('color', '#ffffff');
+
+        text("test version:", width * 0.3, height * 0.6);
+        testVersionRadio.position(width * 0.5 - width * 0.05, height * 0.625);
         styleElement(testVersionRadio, width * 0.2, height * 0.05, fontSize * 1.5);
         testVersionRadio.style('color', '#ffffff');
+
+        text("test order:", width * 0.3, height * 0.7);
+        testOrderRadio.position(width * 0.5 - width * 0.05, height * 0.775);
+        styleElement(testOrderRadio, width * 0.2, height * 0.05, fontSize * 1.5);
+        testOrderRadio.style('color', '#ffffff');  
+
+        textAlign(CENTER);
     }
     if (stage == 3) {
         if (millis() - adaptStartTime > adaptTime * 60 * 1000) {
@@ -176,7 +214,7 @@ function draw() {
         else if (adapt) {
             if (millis() - timestamp < switchTime) {
                 var flicker = (adaptCounter / 2) % 2;
-                drawMcColloughStimulus(adaptColors[flicker], color(1), stimSize, mcN, stimX, stimY, flicker, [-4, 4, 5]);
+                drawMcColloughStimulus(adaptColors[flicker],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, flicker, [-4, 4, 5]);
             }
             else {
                 adapt = false;
@@ -202,37 +240,37 @@ function draw() {
     if (stage == 4) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, testOrder, [-4, 4, 5]);
         }
         else {
-            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), color(0), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
+            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), color(0), stimSize, mcN, stimX, stimY, testOrder, [-4, 4, 5]);
         }
     }
     if (stage == 5) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 0, [4, -4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, testOrder, [4, -4, 5]);
         }
         else {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, testOrder, [-4, 4, 5]);
         }
     }
     if (stage == 6) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, !testOrder, [-4, 4, 5]);
         }
         else {
-            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), color(0), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
+            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), color(0), stimSize, mcN, stimX, stimY, !testOrder, [-4, 4, 5]);
         }
     }
     if (stage == 7) {
         drawWhiteComparisonRects();
         if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 1, [4, -4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, !testOrder, [4, -4, 5]);
         }
         else {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, 1, [-4, 4, 5]);
+            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, !testOrder, [-4, 4, 5]);
         }
     }
     if (stage == 8) {
@@ -270,8 +308,6 @@ function draw() {
     else {
         clipboardButton.hide();
     }
-
-    generateReport();
 }
 
 function calculateRedGreenVal(val) {
@@ -315,20 +351,40 @@ function changeStage(change) {
     stage = constrain(stage + change, -1, 9);
     if (stage == 1) {
         adaptTimeInput.hide();
+
         testVersionRadio.hide();
         if (testVersionRadio.value() == '1') {
             testVersion = 1;
         }
         else {
             testVersion = 2;
+        }
+
+        testOrderRadio.hide();
+        if (testOrderRadio.value() == 'h, v') {
+            testOrder = 0;
+        }
+        else {
+            testOrder = 1;
+        }
+
+        nonadaptColorRadio.hide();
+        if (nonadaptColorRadio.value() == 'white') {
+            nonadaptColor = 0;
+        }
+        else {
+            nonadaptColor = 1;
         }
     }
     if (stage == 2) {
         adaptTimeInput.show();
         testVersionRadio.show();
+        testOrderRadio.show();
+        nonadaptColorRadio.show();
     }
     if (stage == 3) {
         adaptTimeInput.hide();
+
         testVersionRadio.hide();
         if (testVersionRadio.value() == '1') {
             testVersion = 1;
@@ -336,6 +392,23 @@ function changeStage(change) {
         else {
             testVersion = 2;
         }
+
+        testOrderRadio.hide();
+        if (testOrderRadio.value() == 'h, v') {
+            testOrder = 0;
+        }
+        else {
+            testOrder = 1;
+        }
+
+        nonadaptColorRadio.hide();
+        if (nonadaptColorRadio.value() == 'white') {
+            nonadaptColor = 0;
+        }
+        else {
+            nonadaptColor = 1;
+        }
+
         if (0 < change) {
             startAdaptStage();
         }
@@ -506,7 +579,6 @@ function drawHermannGrid(n, r, gS, vC, hC, x, y, hOnV) {
 function drawMcColloughStimulus(c1, c2, s, n, x, y, o, placing) {
     var sW = s / n;
     fill(c1);
-    stroke(c1);
     rect(x, y, s, s);
     fill(c2);
     stroke(c2);
@@ -536,34 +608,26 @@ function drawMcColloughStimulus(c1, c2, s, n, x, y, o, placing) {
 
 function generateReport() {
     var valueNames = [];
-
-    if (testVersion == 1) {
-        valueNames = [
-            'Hermann grid 1 lower left, h on v',
-            'Hermann grid 1 upper rigth, h on v',
-            'Hermann grid 1 lower left, v on h',
-            'McCollough version 1 lower left, horizontal',
-            'McCollough version 1 upper right, horizontal',
-            'McCollough version 1 lower left, vertical',
-            'McCollough version 1 upper right, vertical',
-            'Hermann grid 2 lower left',
-            'Hermann grid 2 upper rigth'
-        ];
+    var testOrderNames = [];
+    if (testOrder) {
+        testOrderNames = [' vertical', 'vertical', 'horizontal', 'horizontal'];
     }
     else {
-        valueNames = [
-            'Hermann grid 1 lower left, h on v',
-            'Hermann grid 1 upper rigth, h on v',
-            'Hermann grid 1 lower left, v on h',
-            'McCollough version 2 large, horizontal',
-            'McCollough version 2 small, horizontal',
-            'McCollough version 2 large, vertical',
-            'McCollough version 2 small, vertical',
-            'Hermann grid 2 lower left',
-            'Hermann grid 2 upper rigth'
-        ];
+        testOrderNames = ['horizontal', 'horizontal', ' vertical', 'vertical'];
     }
-    var reportString = 'adaptation: ' + adaptTime + ' min \n';
+
+    valueNames = [
+        'HG in non-adapt, pre',
+        'HG in adapt, pre',
+        'HG in non-adapt VonH, pre',
+        'MC non-adapt, ' + testOrderNames[0],
+        'MC adapt, ' + testOrderNames[1],
+        'MC non-adapt,  ' + testOrderNames[2],
+        'MC adapt, ' + testOrderNames[3],
+        'HG in non-adapt, post',
+        'HG in adapt, post'
+    ];
+    var reportString = 'adaptation: ' + adaptTime + ' min\nnon-adapt color: ' + nonadaptColorRadio.value() + '\ntest version: ' + testVersion + '\ntest order: ' + testOrderRadio.value() + '\n';
     for (var i = 0; i < measuredValues.length; i++) {
         reportString += valueNames[i] + ": " + measuredValues[i] + "\n";
     }
