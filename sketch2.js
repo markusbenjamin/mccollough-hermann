@@ -198,7 +198,7 @@ function draw() {
         testVersionRadio.style('color', '#ffffff');
 
         text("test order:", width * 0.3, height * 0.7);
-        testOrderRadio.position(width * 0.5 - width * 0.05, height * 0.775);
+        testOrderRadio.position(width * 0.5 - width * 0.05, height * 0.725);
         styleElement(testOrderRadio, width * 0.2, height * 0.05, fontSize * 1.5);
         testOrderRadio.style('color', '#ffffff');  
 
