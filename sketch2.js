@@ -48,9 +48,10 @@ function setParameters() {
     adaptColors = [color(1 / 3, 1, 1), color(1, 1, 1)];
     nonadaptColors = [color(1), color(0)];
 
-    switchTime = 2000;
+    
     maskTime = 500;
     adaptTime = 10;
+    switchTime = adaptTime*60*1000;
     testVersion = 1;
     testOrder = 0;
     nonadaptColor = 0;
@@ -333,6 +334,7 @@ function startAdaptStage() {
     timestamp = millis();
     adaptStartTime = millis();
     adaptTime = adaptTimeInput.value();
+    switchTime = adaptTime*60*1000;
 }
 
 function endAdaptStage() {
