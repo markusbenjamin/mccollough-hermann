@@ -51,7 +51,7 @@ function setParameters() {
     
     maskTime = 500;
     adaptTime = 10;
-    switchTime = adaptTime*60*1000;
+    switchTime = 2000;
     testVersion = 1;
     testOrder = 0;
     nonadaptColor = 0;
@@ -215,7 +215,8 @@ function draw() {
         else if (adapt) {
             if (millis() - timestamp < switchTime) {
                 var flicker = (adaptCounter / 2) % 2;
-                drawMcColloughStimulus(adaptColors[flicker],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, flicker, [-4, 4, 5]);
+                //drawMcColloughStimulus(adaptColors[flicker],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, flicker, [-4, 4, 5]);
+                drawMcColloughStimulus(adaptColors[0],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
             }
             else {
                 adapt = false;
@@ -334,7 +335,6 @@ function startAdaptStage() {
     timestamp = millis();
     adaptStartTime = millis();
     adaptTime = adaptTimeInput.value();
-    switchTime = adaptTime*60*1000;
 }
 
 function endAdaptStage() {
