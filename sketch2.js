@@ -215,8 +215,8 @@ function draw() {
         else if (adapt) {
             if (millis() - timestamp < switchTime) {
                 var flicker = (adaptCounter / 2) % 2;
-                //drawMcColloughStimulus(adaptColors[flicker],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, flicker, [-4, 4, 5]);
-                drawMcColloughStimulus(adaptColors[0],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
+                drawMcColloughStimulus(adaptColors[flicker],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, flicker, [-4, 4, 5]);
+                // 1 COL VERSION drawMcColloughStimulus(adaptColors[0],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
             }
             else {
                 adapt = false;
