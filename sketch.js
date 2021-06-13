@@ -2,6 +2,7 @@ var aspectRatio;
 var stimX, stimY, stimSize;
 var stage;
 var fontSize;
+var fixCrossSize;
 
 var hgN, hgR, hgVC;
 var mcN;
@@ -14,16 +15,15 @@ var nonadaptColor, nonadaptColorRadio;
 
 var adaptTimeInput;
 
-var prevButton, nextButton, clipboardButton;
+var prevButton, nextButton;
 
 var stageToValue, measuredValues, measuredValuesDefault, ranges;
 var sliders;
 
-var resetAll, resetThis;
-
 function setup() {
     aspectRatio = 6 / 8;
     createCanvas(min(windowWidth, windowHeight / aspectRatio), min(windowHeight, windowWidth * aspectRatio));
+    createCanvas(windowWidth,windowHeight);
     colorMode(HSB, 1);
     rectMode(CENTER);
     textAlign(CENTER);
@@ -36,6 +36,7 @@ function setup() {
 
 function windowResized() {
     createCanvas(min(windowWidth, windowHeight / aspectRatio), min(windowHeight, windowWidth * aspectRatio));
+    createCanvas(windowWidth,windowHeight);
     calculateSizes();
 }
 
@@ -44,11 +45,10 @@ function setParameters() {
     hgR = 0.25;
     hgVC = color(1, 0.25, 1);
 
-    mcN = 17;
+    mcN = 21;
     adaptColors = [color(1 / 3, 1, 1), color(1, 1, 1)];
-    nonadaptColors = [color(1), color(0)];
+    nonadaptColors = [color(0), color(1)];
 
-    
     maskTime = 500;
     adaptTime = 10;
     switchTime = 2000;
@@ -71,10 +71,6 @@ function initialize() {
     prevButton.mousePressed(goToPrevStage);
     nextButton = createButton('Next stage');
     nextButton.mousePressed(goToNextStage);
-
-    clipboardButton = createButton('Results to clipboard');
-    clipboardButton.mousePressed(generateReport);
-    clipboardButton.hide();
 
     adaptTimeInput = createInput(adaptTime);
     adaptTimeInput.hide();
@@ -102,13 +98,13 @@ function initialize() {
     testOrderRadio.hide();
 
     nonadaptColorRadio = createRadio('nonadaptColorRadio');
-    nonadaptColorRadio.option('white');
     nonadaptColorRadio.option('black');
+    nonadaptColorRadio.option('white');
     if (nonadaptColor == 0) {
-        nonadaptColorRadio.selected('white');
+        nonadaptColorRadio.selected('black');
     }
     else {
-        nonadaptColorRadio.selected('black');
+        nonadaptColorRadio.selected('white');
     }
     nonadaptColorRadio.hide();
 
@@ -118,17 +114,15 @@ function initialize() {
         sliders[i].hide();
     }
     sliders[stageToValue[stage + 1]].show();
-
-    resetAll = false;
-    resetThis = false;
 }
 
 function calculateSizes() {
     stimX = width * 0.5;
-    stimY = height * 0.525;
-    stimSize = width * 0.5;
+    stimY = height * 0.5;
+    stimSize = max(width,height) * 0.3;
 
-    fontSize = width * 0.02;
+    fontSize = width * 0.015;
+    fixCrossSize = max(width,height) * 0.02;
 }
 
 function drawSlider() {
@@ -138,43 +132,29 @@ function drawSlider() {
         fill(1);
         textSize(fontSize);
         text("<-- F", width * 0.35, height * 0.07);
-
         text("H -->", width * 0.65, height * 0.07);
-        textSize(fontSize);
-        text("R to reset this", width * 0.5, height * 0.92);
-        text("A to reset all", width * 0.5, height * 0.96);
         noFill();
     }
 }
 
 function draw() {
-    if (resetAll) {
-        for (var i = 0; i < measuredValues.length; i++) {
-            sliders[i].value(measuredValuesDefault[i]);
-        }
-        resetAll = false;
-    }
-    else if (resetThis && stageToValue[stage + 1] != null) {
-        sliders[stageToValue[stage + 1]].value(measuredValuesDefault[stageToValue[stage + 1]]);
-        resetThis = false;
-    }
     readSliderValue();
     background(0);
     drawSlider();
 
     if (stage == -1) {
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixationCross(stimX, stimY);
+        drawFixCross(stimX, stimY);
         drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [-1, 1]);
     }
     if (stage == 0) {
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixationCross(stimX, stimY);
+        drawFixCross(stimX, stimY);
         drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [1, -1]);
     }
     if (stage == 1) {
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
-        drawFixationCross(stimX, stimY);
+        drawFixCross(stimX, stimY);
         drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [-1, 1]);
     }
     if (stage == 2) {
@@ -201,7 +181,7 @@ function draw() {
         text("test order:", width * 0.3, height * 0.7);
         testOrderRadio.position(width * 0.5 - width * 0.05, height * 0.725);
         styleElement(testOrderRadio, width * 0.2, height * 0.05, fontSize * 1.5);
-        testOrderRadio.style('color', '#ffffff');  
+        testOrderRadio.style('color', '#ffffff');
 
         textAlign(CENTER);
     }
@@ -215,7 +195,7 @@ function draw() {
         else if (adapt) {
             if (millis() - timestamp < switchTime) {
                 var flicker = (adaptCounter / 2) % 2;
-                drawMcColloughStimulus(adaptColors[flicker],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, flicker, [-4, 4, 5]);
+                drawMcColloughStimulus(adaptColors[flicker], nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, flicker, [-4, 4, 5]);
                 // 1 COL VERSION drawMcColloughStimulus(adaptColors[0],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
             }
             else {
@@ -277,12 +257,12 @@ function draw() {
     }
     if (stage == 8) {
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixationCross(stimX, stimY);
+        drawFixCross(stimX, stimY);
         drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [-1, 1]);
     }
     if (stage == 9) {
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixationCross(stimX, stimY);
+        drawFixCross(stimX, stimY);
         drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [1, -1]);
     }
 
@@ -290,8 +270,6 @@ function draw() {
     styleElement(prevButton, width * 0.1, height * 0.08, fontSize);
     nextButton.position(width * 0.97 - width * 0.1, height * 0.88);
     styleElement(nextButton, width * 0.1, height * 0.08, fontSize);
-    clipboardButton.position(width * 0.5 - width * 0.155 * 0.5, height * 0.07 - height * 0.027);
-    styleElement(clipboardButton, width * 0.155, height * 0.035, fontSize * 0.75);
     if (stage == -1) {
         prevButton.hide();
     }
@@ -303,12 +281,6 @@ function draw() {
     }
     else {
         nextButton.show();
-    }
-    if (stage != 2 && stage != 3) {
-        clipboardButton.show();
-    }
-    else {
-        clipboardButton.hide();
     }
 }
 
@@ -404,7 +376,7 @@ function changeStage(change) {
         }
 
         nonadaptColorRadio.hide();
-        if (nonadaptColorRadio.value() == 'white') {
+        if (nonadaptColorRadio.value() == 'black') {
             nonadaptColor = 0;
         }
         else {
@@ -444,11 +416,11 @@ function changeSliderValue(change) {
     }
 }
 
-function drawFixationCross(x, y) {
-    stroke(1, 1, 1);
-    strokeWeight(2);
-    line(x - width * 0.015, y, x + width * 0.015, y);
-    line(x, y - width * 0.015, x, y + width * 0.015);
+function drawFixCross(x, y) {
+    stroke(1,1,1);
+    strokeWeight(3);
+    line(x - fixCrossSize, y, x + fixCrossSize, y);
+    line(x, y - fixCrossSize, x, y + fixCrossSize);
     noStroke();
     strokeWeight(1);
 }
@@ -474,15 +446,6 @@ function keyPressed() {
     if (key === 'h' || key === 'H') {
         changeSliderValue(0.005);
     }
-
-    if (key === 'r' || key === 'R') {
-        if (stageToValue[stage + 1] != null) {
-            resetThis = true;
-        }
-    }
-    if (key === 'a' || key === 'A') {
-        resetAll = true;
-    }
 }
 
 function drawIllusionStrengthMeter(xIn, yIn, illusionStrength, placing) {
@@ -492,6 +455,7 @@ function drawIllusionStrengthMeter(xIn, yIn, illusionStrength, placing) {
     var x = xIn + placing[0] * translate;
     var y = yIn + placing[1] * translate;
     fill(1);
+    stroke(1);
     rect(x, y, 3 * hgDims[0] + 2 * hgDims[1], 3 * hgDims[0] + 2 * hgDims[1]);
     noFill();
     for (var i = -illusionSpotSize / 2; i < illusionSpotSize / 2; i++) {
