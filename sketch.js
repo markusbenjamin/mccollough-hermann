@@ -1,4 +1,3 @@
-var aspectRatio;
 var stimX, stimY, stimSize;
 var stage;
 var fontSize;
@@ -9,9 +8,6 @@ var mcN;
 var adaptColors, nonadaptColors;
 var adapt, mask;
 var adaptTime, switchTime, adaptCounter, timestamp, adaptStartTime;
-var testVersion, testVersionRadio;
-var testOrder, testOrderRadio;
-var nonadaptColor, nonadaptColorRadio;
 
 var adaptTimeInput;
 
@@ -21,9 +17,7 @@ var stageToValue, measuredValues, measuredValuesDefault, ranges;
 var sliders;
 
 function setup() {
-    aspectRatio = 6 / 8;
-    createCanvas(min(windowWidth, windowHeight / aspectRatio), min(windowHeight, windowWidth * aspectRatio));
-    createCanvas(windowWidth,windowHeight);
+    createCanvas(windowWidth, windowHeight);
     colorMode(HSB, 1);
     rectMode(CENTER);
     textAlign(CENTER);
@@ -35,24 +29,23 @@ function setup() {
 }
 
 function windowResized() {
-    createCanvas(min(windowWidth, windowHeight / aspectRatio), min(windowHeight, windowWidth * aspectRatio));
-    createCanvas(windowWidth,windowHeight);
+    createCanvas(windowWidth, windowHeight);
     calculateSizes();
 }
 
 function setParameters() {
     hgN = 7;
-    hgR = 0.25;
+    hgR = 1 / 3;
     hgVC = color(1, 0.25, 1);
 
-    mcN = 21;
+    mcN = 15;
+
     adaptColors = [color(1 / 3, 1, 1), color(1, 1, 1)];
     nonadaptColors = [color(0), color(1)];
 
     maskTime = 500;
-    adaptTime = 10;
+    adaptTime = 20;
     switchTime = 2000;
-    testVersion = 1;
     testOrder = 0;
     nonadaptColor = 0;
 
@@ -72,42 +65,6 @@ function initialize() {
     nextButton = createButton('Next stage');
     nextButton.mousePressed(goToNextStage);
 
-    adaptTimeInput = createInput(adaptTime);
-    adaptTimeInput.hide();
-
-    testVersionRadio = createRadio('testVersionRadio');
-    testVersionRadio.option('1');
-    testVersionRadio.option('2');
-    if (testVersion == 1) {
-        testVersionRadio.selected('1');
-    }
-    else {
-        testVersionRadio.selected('2');
-    }
-    testVersionRadio.hide();
-
-    testOrderRadio = createRadio('testOrderRadio');
-    testOrderRadio.option('h, v');
-    testOrderRadio.option('v, h');
-    if (testOrder == 0) {
-        testOrderRadio.selected('h, v');
-    }
-    else {
-        testOrderRadio.selected('v, h');
-    }
-    testOrderRadio.hide();
-
-    nonadaptColorRadio = createRadio('nonadaptColorRadio');
-    nonadaptColorRadio.option('black');
-    nonadaptColorRadio.option('white');
-    if (nonadaptColor == 0) {
-        nonadaptColorRadio.selected('black');
-    }
-    else {
-        nonadaptColorRadio.selected('white');
-    }
-    nonadaptColorRadio.hide();
-
     sliders = [];
     for (var i = 0; i < measuredValues.length; i++) {
         sliders.push(createSlider(ranges[i][0], ranges[i][1], measuredValues[i], 1 / 1000));
@@ -119,10 +76,10 @@ function initialize() {
 function calculateSizes() {
     stimX = width * 0.5;
     stimY = height * 0.5;
-    stimSize = max(width,height) * 0.3;
+    stimSize = max(width, height) * 0.3;
 
     fontSize = width * 0.015;
-    fixCrossSize = max(width,height) * 0.02;
+    fixCrossSize = max(width, height) * 0.02;
 }
 
 function drawSlider() {
@@ -145,45 +102,22 @@ function draw() {
     if (stage == -1) {
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [-1, 1]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage + 1]], [-1, 1]);
     }
     if (stage == 0) {
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [1, -1]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage + 1]], [1, -1]);
     }
     if (stage == 1) {
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [-1, 1]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage + 1]], [-1, 1]);
     }
     if (stage == 2) {
         fill(1);
         textSize(fontSize * 2);
         text("experiment settings", width * 0.5, height * 0.2);
-
-        textAlign(LEFT);
-        textSize(fontSize * 1.5);
-        text("adaptation time:", width * 0.3, height * 0.3);
-        adaptTimeInput.position(width * 0.5 - width * 0.1, height * 0.325);
-        styleElement(adaptTimeInput, width * 0.2, height * 0.05, fontSize * 1.5);
-
-        text("non-adapt color:", width * 0.3, height * 0.45);
-        nonadaptColorRadio.position(width * 0.5 - width * 0.05, height * 0.475);
-        styleElement(nonadaptColorRadio, width * 0.2, height * 0.05, fontSize * 1.5);
-        nonadaptColorRadio.style('color', '#ffffff');
-
-        text("test version:", width * 0.3, height * 0.6);
-        testVersionRadio.position(width * 0.5 - width * 0.05, height * 0.625);
-        styleElement(testVersionRadio, width * 0.2, height * 0.05, fontSize * 1.5);
-        testVersionRadio.style('color', '#ffffff');
-
-        text("test order:", width * 0.3, height * 0.7);
-        testOrderRadio.position(width * 0.5 - width * 0.05, height * 0.725);
-        styleElement(testOrderRadio, width * 0.2, height * 0.05, fontSize * 1.5);
-        testOrderRadio.style('color', '#ffffff');
-
-        textAlign(CENTER);
     }
     if (stage == 3) {
         if (millis() - adaptStartTime > adaptTime * 60 * 1000) {
@@ -195,8 +129,13 @@ function draw() {
         else if (adapt) {
             if (millis() - timestamp < switchTime) {
                 var flicker = (adaptCounter / 2) % 2;
-                drawMcColloughStimulus(adaptColors[flicker], nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, flicker, [-4, 4, 5]);
-                // 1 COL VERSION drawMcColloughStimulus(adaptColors[0],nonadaptColors[nonadaptColor], stimSize, mcN, stimX, stimY, 0, [-4, 4, 5]);
+                drawMcCollough(adaptColors[flicker], stimSize, mcN, stimX, stimY, flicker);
+                var naDims = getNonadaptDims([-1, 1]);
+                var x = naDims[0];
+                var y = naDims[1];
+                fill(0);
+                rect(x, y, naDims[2], naDims[3]);
+                noFill();
             }
             else {
                 adapt = false;
@@ -221,49 +160,33 @@ function draw() {
     }
     if (stage == 4) {
         drawWhiteComparisonRects();
-        if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, testOrder, [-4, 4, 5]);
-        }
-        else {
-            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), color(0), stimSize, mcN, stimX, stimY, testOrder, [-4, 4, 5]);
-        }
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, testOrder);
+        drawTestMask([-1, 1]);
     }
     if (stage == 5) {
         drawWhiteComparisonRects();
-        if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, testOrder, [4, -4, 5]);
-        }
-        else {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, testOrder, [-4, 4, 5]);
-        }
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, testOrder);
+        drawTestMask([1, -1]);
     }
     if (stage == 6) {
         drawWhiteComparisonRects();
-        if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, !testOrder, [-4, 4, 5]);
-        }
-        else {
-            drawMcColloughStimulus(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), color(0), stimSize, mcN, stimX, stimY, !testOrder, [-4, 4, 5]);
-        }
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, !testOrder);
+        drawTestMask([-1, 1]);
     }
     if (stage == 7) {
         drawWhiteComparisonRects();
-        if (testVersion == 1) {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, !testOrder, [4, -4, 5]);
-        }
-        else {
-            drawMcColloughStimulus(color(0), calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, !testOrder, [-4, 4, 5]);
-        }
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage + 1]]), stimSize, mcN, stimX, stimY, !testOrder);
+        drawTestMask([1, -1]);
     }
     if (stage == 8) {
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [-1, 1]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage + 1]], [-1, 1]);
     }
     if (stage == 9) {
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(stimX, stimY, measuredValues[stageToValue[stage + 1]], [1, -1]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage + 1]], [1, -1]);
     }
 
     prevButton.position(width * 0.03, height * 0.88);
@@ -324,65 +247,12 @@ function goToPrevStage() {
 function changeStage(change) {
     stage = constrain(stage + change, -1, 9);
     if (stage == 1) {
-        adaptTimeInput.hide();
-
-        testVersionRadio.hide();
-        if (testVersionRadio.value() == '1') {
-            testVersion = 1;
-        }
-        else {
-            testVersion = 2;
-        }
-
-        testOrderRadio.hide();
-        if (testOrderRadio.value() == 'h, v') {
-            testOrder = 0;
-        }
-        else {
-            testOrder = 1;
-        }
-
-        nonadaptColorRadio.hide();
-        if (nonadaptColorRadio.value() == 'white') {
-            nonadaptColor = 0;
-        }
-        else {
-            nonadaptColor = 1;
-        }
+        
     }
     if (stage == 2) {
-        adaptTimeInput.show();
-        testVersionRadio.show();
-        testOrderRadio.show();
-        nonadaptColorRadio.show();
+       
     }
     if (stage == 3) {
-        adaptTimeInput.hide();
-
-        testVersionRadio.hide();
-        if (testVersionRadio.value() == '1') {
-            testVersion = 1;
-        }
-        else {
-            testVersion = 2;
-        }
-
-        testOrderRadio.hide();
-        if (testOrderRadio.value() == 'h, v') {
-            testOrder = 0;
-        }
-        else {
-            testOrder = 1;
-        }
-
-        nonadaptColorRadio.hide();
-        if (nonadaptColorRadio.value() == 'black') {
-            nonadaptColor = 0;
-        }
-        else {
-            nonadaptColor = 1;
-        }
-
         if (0 < change) {
             startAdaptStage();
         }
@@ -417,7 +287,7 @@ function changeSliderValue(change) {
 }
 
 function drawFixCross(x, y) {
-    stroke(1,1,1);
+    stroke(1);
     strokeWeight(3);
     line(x - fixCrossSize, y, x + fixCrossSize, y);
     line(x, y - fixCrossSize, x, y + fixCrossSize);
@@ -448,16 +318,17 @@ function keyPressed() {
     }
 }
 
-function drawIllusionStrengthMeter(xIn, yIn, illusionStrength, placing) {
-    var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
-    var illusionSpotSize = round(hgDims[1] * 1.5);
-    var translate = 1.5 * (hgDims[0] + hgDims[1]);
-    var x = xIn + placing[0] * translate;
-    var y = yIn + placing[1] * translate;
+function drawIllusionStrengthMeter(illusionStrength, placing) {
+    var naDims = getNonadaptDims(placing);
+    var x = naDims[0];
+    var y = naDims[1];
     fill(1);
     stroke(1);
-    rect(x, y, 3 * hgDims[0] + 2 * hgDims[1], 3 * hgDims[0] + 2 * hgDims[1]);
+    rect(x, y, naDims[2], naDims[3]);
     noFill();
+
+    var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
+    var illusionSpotSize = round(hgDims[1] * 1.5);
     for (var i = -illusionSpotSize / 2; i < illusionSpotSize / 2; i++) {
         for (var j = -illusionSpotSize / 2; j < illusionSpotSize / 2; j++) {
             var d = dist(0, 0, i, j) / dist(0, 0, illusionSpotSize / 2, illusionSpotSize / 2);
@@ -481,6 +352,14 @@ function illusionMain(d, hsp, ab, min, max) {
     return 1 - illusionG(d, hsp, ab, min, max);
 }
 
+function getNonadaptDims(placing) {
+    var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
+    var translate = 1.5 * (hgDims[0] + hgDims[1]);
+    var x = stimX + placing[0] * translate;
+    var y = stimY + placing[1] * translate;
+    return [x, y, 3 * hgDims[0] + 2 * hgDims[1], 3 * hgDims[0] + 2 * hgDims[1]];
+}
+
 function hermannGridDimensions(n, r, gS) {
     var sW = (r / (1 + r)) * (1 / n);
     var bW = (1 / (1 + r)) * (1 / n);
@@ -500,6 +379,7 @@ function drawHermannGrid(n, r, gS, vC, hC, x, y, hOnV) {
 
     fill(0);
     rect(x, y, gS, gS);
+    noFill();
 
     if (hOnV) {
         fill(vC);
@@ -542,32 +422,33 @@ function drawHermannGrid(n, r, gS, vC, hC, x, y, hOnV) {
     noStroke();
 }
 
-function drawMcColloughStimulus(c1, c2, s, n, x, y, o, placing) {
-    var sW = s / n;
-    fill(c1);
-    rect(x, y, s, s);
-    fill(c2);
-    stroke(c2);
-    rect(x + placing[0] * sW, y + placing[1] * sW, sW * +placing[2], sW * +placing[2]);
-    noFill();
-    noStroke();
-
-    var counter = 1;
-    fill(0);
-    stroke(0);
-    for (var i = 1; i < n * 2; i += 1) {
-        if (i % 2 == 1) {
-            if (counter % 2 != 1) {
-                if (o) {
-                    rect(x + map(i, 0, n * 2, -s / 2, s / 2), y, sW, s);
-                }
-                else {
-                    rect(x, y + map(i, 0, n * 2, -s / 2, s / 2), s, sW);
-                }
-            }
-            counter++;
+function drawMcCollough(c, s, m, x, y, o) {
+    var sW = s / (2 * m - 1);
+    fill(c);
+    for (var i = 1; i < m + 1; i++) {
+        if (o) {//vertical
+            rect(x - 0.5 * s + 0.5 * sW + (i - 1) * 2 * sW, y, sW, s);
+        }
+        else {//horizontal
+            rect(x, y - 0.5 * s + 0.5 * sW + (i - 1) * 2 * sW, s, sW);
         }
     }
+    noFill();
+}
+
+function drawTestMask(placing) {
+    var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
+    var naDims = getNonadaptDims(placing);
+
+    fill(0);
+    stroke(0);
+    rect(stimX, stimY + placing[0] * stimSize * 0.25, stimSize, stimSize * 0.5);
+    rect(stimX + placing[1] * stimSize * 0.25, stimY + placing[1] * stimSize * 0.25, stimSize * 0.5, stimSize * 0.5);
+    var translate = (naDims[3] + hgDims[0] + hgDims[1]) * 0.5;
+    rect(naDims[0] - translate, naDims[1], hgDims[0] + hgDims[1], 4.5 * (hgDims[0] + hgDims[1]));
+    rect(naDims[0], naDims[1] - translate, 4.5 * (hgDims[0] + hgDims[1]), hgDims[0] + hgDims[1]);
+    rect(naDims[0] + translate, naDims[1], hgDims[0] + hgDims[1], 4.5 * (hgDims[0] + hgDims[1]));
+    rect(naDims[0], naDims[1] + translate, 4.5 * (hgDims[0] + hgDims[1]), hgDims[0] + hgDims[1]);
     noFill();
     noStroke();
 }
@@ -597,14 +478,4 @@ function generateReport() {
     for (var i = 0; i < measuredValues.length; i++) {
         reportString += valueNames[i] + ": " + measuredValues[i] + "\n";
     }
-    copyToClipboard(reportString);
-}
-
-function copyToClipboard(text) {
-    var dummy = document.createElement("textarea");
-    document.body.appendChild(dummy);
-    dummy.value = text;
-    dummy.select();
-    document.execCommand("copy");
-    document.body.removeChild(dummy);
 }
