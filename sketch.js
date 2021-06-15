@@ -285,8 +285,10 @@ function draw() {
                     var x = naDims[0];
                     var y = naDims[1];
                     fill(0);
+                    stroke(0);
                     rect(x, y, naDims[2], naDims[3]);
                     noFill();
+                    noStroke();
                     drawFixCross(stimX, stimY);
                 }
                 else {
@@ -519,7 +521,7 @@ function runCalibration() {
             if (i == 4 && 5 < total(calibDots)[2]) {
                 fill(1);
                 textSize(fontSize * 1.5);
-                text("click all yellow dots five times", calibDots[i][0], calibDots[i][1]);
+                text("click each yellow dot five times", calibDots[i][0], calibDots[i][1]);
             }
             else {
                 fill(0.15, 1, calibDots[i][2] / 5);
