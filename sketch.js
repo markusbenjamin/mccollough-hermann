@@ -16,6 +16,8 @@ var sliders;
 
 var adaptDurationInput, participantInput;
 
+var saved;
+
 //load gaze filter
 let WASM_URL;
 
@@ -143,6 +145,8 @@ function initialize() {
     discrJudgement = -1;
 
     calibSize = 0.8;
+
+    saved = false;
 }
 
 function calculateSizes() {
@@ -400,9 +404,16 @@ function draw() {
         }
     }
     if (stage == endStage) {
+        var savedString
+        if(saved){
+            savedString = "saved";
+        }
+        else{
+            savedString = "not yet saved";
+        }
         fill(1);
         textSize(fontSize * 2);
-        text("experiment finished\n\nresults saved", width * 0.5, height * 0.4);
+        text("experiment finished\n\nresults "+savedString, width * 0.5, height * 0.4);
         noFill();
     }
 
@@ -669,6 +680,9 @@ function changeStage(change) {
             finishButton.show();
         }
         if (stage == endStage) {
+            if (saved == false) {
+                saveResults();
+            }
             finishButton.hide();
             prevButton.hide();
         }
@@ -994,5 +1008,8 @@ function saveResults() {
 
     saveTable(resultsTable, 'results_' + participantID + '.csv');
 
-    goToNextStage();
+    if (saved == false) {
+        saved = true;
+        goToNextStage();
+    }
 }
