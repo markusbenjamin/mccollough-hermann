@@ -407,15 +407,15 @@ function draw() {
     }
     if (stage == endStage) {
         var savedString
-        if(saved){
+        if (saved) {
             savedString = "saved";
         }
-        else{
+        else {
             savedString = "not yet saved";
         }
         fill(1);
         textSize(fontSize * 2);
-        text("experiment finished\n\nresults "+savedString, width * 0.5, height * 0.4);
+        text("experiment finished\n\nresults " + savedString, width * 0.5, height * 0.4);
         noFill();
     }
 
@@ -465,13 +465,13 @@ function startDiscriminator() {
 }
 
 function runDiscriminator() {
-    if (false && isNaN(bestGazeP[0])) { //DEV
+    if (isNaN(bestGazeP[0])) {
         discrStatus = -1;
         discrJudgement = -1;
     }
     else {
-        //var smoothPog = getSmoothPog(round(getFrameRate() * discrSmoothTime / 1000)); //DEV
-        if (discrDist < dist(mouseX, mouseY, width * 0.5, height * 0.5)) { //DEV
+        var smoothPog = getSmoothPog(round(getFrameRate() * discrSmoothTime / 1000));
+        if (discrDist < dist(smoothPog[0], smoothPog[1], width * 0.5, height * 0.5)) {
             if (discrStatus == 0) {
                 discrChangeTime = millis();
             }
@@ -504,8 +504,13 @@ function atJudgement(pre) {
     }
 }
 
+function getSmoothPog(n) {
+    var twoEyesSmooth = mean(pogs.slice(-n));
+    return [(twoEyesSmooth[0] + twoEyesSmooth[2]) / 2, (twoEyesSmooth[1] + twoEyesSmooth[3]) / 2]
+}
+
 function startCalibration(w, h) {
-    //window.addEventListener("click", onmouseclick); DEV
+    window.addEventListener("click", onmouseclick);
     calibration = true;
     calibDots = [];
     for (var i = -1; i < 2; i++) {
@@ -536,7 +541,7 @@ function runCalibration() {
 }
 
 function endCalibration() {
-    //window.removeEventListener("click", onmouseclick); DEV
+    window.removeEventListener("click", onmouseclick);
     calibration = false;
 }
 
