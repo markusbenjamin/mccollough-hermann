@@ -462,6 +462,14 @@ function startDiscriminator() {
     discrChangeTime = 0;
     discrStatus = 0;
     discrJudgement = 0;
+    discrOn = true;
+}
+
+function stopDiscriminator() {
+    discrChangeTime = 0;
+    discrStatus = -1;
+    discrJudgement = -1;
+    discrOn = false;
 }
 
 function runDiscriminator() {
@@ -772,12 +780,11 @@ function keyPressed() {
         changeSliderValue(0.005);
     }
 
-    if(key == 'q' || key == 'Q'){
-        if(discrOn){
-            discrOn = false;
+    if (key == 'q' || key == 'Q') {
+        if (discrOn) {
+            stopDiscriminator()
         }
-        else{
-            discrOn = true;
+        else {
             startDiscriminator();
         }
     }
