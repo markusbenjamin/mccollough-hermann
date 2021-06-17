@@ -152,7 +152,7 @@ function initialize() {
 function calculateSizes() {
     stimX = width * 0.5;
     stimY = height * 0.5;
-    stimSize = max(width, height) * 0.25;
+    stimSize = max(width, height) * 0.2;
 
     fontSize = width * 0.015;
     var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
@@ -744,7 +744,6 @@ function drawSlider() {
         }
         else {
             sliders[stageToValue[stage]].hide();
-            drawAwayMessage();
         }
     }
 }
