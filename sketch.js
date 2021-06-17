@@ -152,7 +152,7 @@ function initialize() {
 function calculateSizes() {
     stimX = width * 0.5;
     stimY = height * 0.5;
-    stimSize = max(width, height) * 0.3;
+    stimSize = max(width, height) * 0.25;
 
     fontSize = width * 0.015;
     var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
@@ -770,6 +770,16 @@ function keyPressed() {
     }
     if (key === 'd' || key === 'D') {
         changeSliderValue(0.005);
+    }
+
+    if(key == 'q' || key == 'Q'){
+        if(discrOn){
+            discrOn = false;
+        }
+        else{
+            discrOn = true;
+            startDiscriminator();
+        }
     }
 
     if (key === 'j' || key === 'J') {
