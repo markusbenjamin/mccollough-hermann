@@ -137,7 +137,7 @@ function initialize() {
     gazeSmoothNum = 15;
 
     discrOn = false;
-    discrDist = 300;
+    discrDist = 400;
     discrAwayStatusDuration = 60;
     discrSmoothTime = 400;
 
@@ -316,9 +316,15 @@ function draw() {
                 endAdaptStage();
             }
         }
+        rectMode(CORNER);
+        fill(1);
+        rect(width * 0.33, height * 0.05, width * 0.33 - width * 0.33 * ((millis() - adaptAwayDuration - adaptStartTime)/(adaptDuration * 60 * 1000)), height * 0.02);
+        rectMode(CENTER);
+        noFill();
         /*fill(1);
         textSize(fontSize * 2);
-        text(round(adaptDuration * 60 * 1000 - (millis() - adaptAwayDuration - adaptStartTime)), width * 0.5, height * 0.2);*/
+        //text(round(adaptDuration * 60 * 1000 - (millis() - adaptAwayDuration - adaptStartTime)), width * 0.5, height * 0.2);
+        text(1-(millis() - adaptAwayDuration - adaptStartTime)/(adaptDuration * 60 * 1000), width * 0.5, height * 0.2);*/
     }
     if (stage == 13) {
         fill(1);
@@ -467,8 +473,8 @@ function startDiscriminator() {
 
 function stopDiscriminator() {
     discrChangeTime = 0;
-    discrStatus = -1;
-    discrJudgement = -1;
+    discrStatus = 0;
+    discrJudgement = 0;
     discrOn = false;
 }
 
@@ -989,6 +995,7 @@ function saveResults() {
     var resultsTable = new p5.Table();
 
     resultsTable.addColumn('participantID');
+    resultsTable.addColumn('expDuration');
     resultsTable.addColumn('adaptDuration');
     resultsTable.addColumn('mcTestOrder');
     resultsTable.addColumn('hrPreTestOrder');
@@ -1010,6 +1017,7 @@ function saveResults() {
 
     let newRow = resultsTable.addRow();
     newRow.setNum('participantID', participantID);
+    newRow.setNum('expDuration', millis() / 1000 / 60);
     newRow.setNum('adaptDuration', adaptDuration);
     newRow.setNum('mcTestOrder', mcTestOrder());
     newRow.setNum('hrPreTestOrder', hgPreTestOrder());
