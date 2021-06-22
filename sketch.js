@@ -84,7 +84,7 @@ function setParameters() {
 
     mcN = 15;
 
-    adaptColors = [color(1 / 3, 1, 1), color(1, 1, 1)];
+    adaptColors = [color(1, 1, 1), color(1 / 3, 1, 1)];
     nonadaptColors = [color(0), color(1)];
 
     maskDuration = 500;
