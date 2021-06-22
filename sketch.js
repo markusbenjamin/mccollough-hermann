@@ -43,6 +43,8 @@ var trackingStatus; //TrackEvent.eventType
 var pog; //TrackEvent.pogArray()
 var bestGazeP; //TrackEvent.bestGazePoint()
 
+var gazeTable;
+
 var fixPoint; //TrackEvent.fixationPoint()
 var fixDur; //TrackEvent.fixationDuration()
 var fixStatus; //TrackEvent.fixationEvent()
@@ -133,12 +135,13 @@ function initialize() {
 
     loadGazeFilter();
     pogSmooth = [-1, -1];
+    pog = [NaN, NaN, NaN, NaN];
 
     gazeSmoothNum = 15;
 
     discrOn = false;
     discrDist = 400;
-    discrAwayStatusDuration = 60;
+    discrAwayStatusDuration = 500;
     discrSmoothTime = 400;
 
     discrStatus = -1;
@@ -147,6 +150,8 @@ function initialize() {
     calibSize = 0.8;
 
     saved = false;
+
+    startTrackingTable();
 }
 
 function calculateSizes() {
@@ -318,7 +323,7 @@ function draw() {
         }
         rectMode(CORNER);
         fill(1);
-        rect(width * 0.33, height * 0.05, width * 0.33 - width * 0.33 * ((millis() - adaptAwayDuration - adaptStartTime)/(adaptDuration * 60 * 1000)), height * 0.02);
+        rect(width * 0.33, height * 0.05, width * 0.33 - width * 0.33 * constrain((millis() - adaptAwayDuration - adaptStartTime) / (adaptDuration * 60 * 1000), 0, 10 ^ 10), height * 0.02);
         rectMode(CENTER);
         noFill();
         /*fill(1);
@@ -431,6 +436,42 @@ function draw() {
     styleElement(nextButton, width * 0.1, height * 0.08, fontSize);
     finishButton.position(width * 0.97 - width * 0.1, height * 0.88);
     styleElement(finishButton, width * 0.1, height * 0.08, fontSize);
+
+    saveTracking();
+}
+
+function startTrackingTable() {
+    gazeTable = new p5.Table();
+    gazeTable.addColumn('frame');
+    gazeTable.addColumn('time');
+    gazeTable.addColumn('stage');
+    gazeTable.addColumn('discrjudgement');
+    gazeTable.addColumn('discrstatus');
+    gazeTable.addColumn('pogrx');
+    gazeTable.addColumn('pogry');
+    gazeTable.addColumn('poglx');
+    gazeTable.addColumn('pogly');
+    gazeTable.addColumn('mousex');
+    gazeTable.addColumn('mousey');
+}
+
+function saveTracking() {
+    newRow = gazeTable.addRow();
+    newRow.setNum('frame', frameCount);
+    newRow.setNum('time', millis());
+    newRow.setNum('stage', stage);
+    newRow.setNum('discrjudgement', discrJudgement);
+    newRow.setNum('discrstatus', discrStatus);
+    newRow.setNum('pogrx', pog[0]);
+    newRow.setNum('pogry', pog[0]);
+    newRow.setNum('poglx', pog[0]);
+    newRow.setNum('pogly', pog[0]);
+    newRow.setNum('mousex', mouseX);
+    newRow.setNum('mousey', mouseY);
+}
+
+function exportTrackingTable() {
+    saveTable(gazeTable, 'gaze_data_' + participantID + '.csv');
 }
 
 function drawDiscriminator() {
@@ -479,7 +520,7 @@ function stopDiscriminator() {
 }
 
 function runDiscriminator() {
-    if (isNaN(bestGazeP[0])) {
+    if (isNaN(pog[0])) {
         discrStatus = -1;
         discrJudgement = -1;
     }
@@ -1038,7 +1079,7 @@ function saveResults() {
     newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[3] - 1], measuredValues[13]);
 
     saveTable(resultsTable, 'results_' + participantID + '.csv');
-
+    exportTrackingTable();
     if (saved == false) {
         saved = true;
         goToNextStage();
