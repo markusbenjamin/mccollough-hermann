@@ -11,7 +11,7 @@ var adaptDuration, switchDuration, adaptCounter, adaptMaskSwitchTime, adaptStart
 
 var prevButton, nextButton, finishButton;
 
-var stageToValue, measuredValues, measuredValuesDefault, ranges;
+var stageToValue, measuredValues, measuredValuesDefault, ranges, stageNames;
 var sliders;
 
 var adaptDurationInput, participantInput;
@@ -67,6 +67,7 @@ function setup() {
     colorMode(HSB, 1);
     rectMode(CENTER);
     textAlign(CENTER);
+    strokeCap(SQUARE);
     noStroke();
     noFill();
 
@@ -94,9 +95,10 @@ function setParameters() {
     switchDuration = 2000;
     nonadaptColor = 0;
 
-    stageToValue = [null, null, null, null, 0, 1, 2, 3, 4, 5, null, null, null, null, 6, 7, 8, 9, null, null, 10, 11, 12, 13, null];
-    measuredValues = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0];
-    ranges = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]];
+    stageNames = ['start', 'calib 1', 'gaze tracking test', 'HG warmup instructions', 'HG warmup', 'HG instructions 1', 'HG nocol pre a/na 1.1', 'HG nocol pre a/na 1.2', 'HG nocol pre a/na 2.1', 'HG nocol pre a/na 2.2', 'HG below pre a/na 1.1', 'HG below pre a/na 1.2', 'HG below pre a/na 2.1', 'HG below pre a/na 2.2', 'HG above pre a/na', 'HG above pre a/na', 'calib 1', 'adapt instructions', 'adapt', 'HG instructions 2', 'HG below post a/na 1.1', 'HG below post a/na 1.2', 'HG below post a/na 2.1', 'HG below post a/na 2.2', 'HG above post a/na', 'HG above post a/na', 'calib 3', 'MC test instructions', 'MC test 1', 'MC test 2', 'MC test 3', 'MC test 4', 'end'];
+    stageToValue = [null, null, null, null, 0, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, null, null, null, null, 11, 12, 13, 14, 15, 16, null, null, 17, 18, 19, 20, null];
+    measuredValues = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0];
+    ranges = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]];
 }
 
 function initialize() {
@@ -104,10 +106,8 @@ function initialize() {
 
     stage = 0;
     startStage = 0;
-    endStage = 24;
-    adaptStage = 12;
-
-    participantID = 1;
+    endStage = 32;
+    adaptStage = 18;
 
     prevButton = createButton('Prev stage');
     prevButton.mousePressed(goToPrevStage);
@@ -152,6 +152,8 @@ function initialize() {
     saved = false;
 
     startTrackingTable();
+
+    discrAwayJudgementTime = -1;
 }
 
 function calculateSizes() {
@@ -175,7 +177,7 @@ function draw() {
         runDiscriminator();
     }
 
-    if (stage == 0) {
+    if (stage == 0) { //exp start
         fill(1);
         textSize(fontSize * 2);
         text("experiment settings", width * 0.5, height * 0.2);
@@ -190,233 +192,204 @@ function draw() {
         styleElement(participantInput, width * 0.2, height * 0.05, fontSize * 1.5);
         textAlign(CENTER);
     }
-    if (stage == 1) {
+    if (stage == 1) { //calib 1
         runCalibration();
     }
-    if (stage == 2) {
+    if (stage == 2) { //gaze track test
         drawDiscriminator();
         //showTrackingPredictions();
         //showTrackingStatus();
     }
-    if (stage == 3) {
+    if (stage == 3) { //HG warmup instructions
+        fill(1);
+        textSize(fontSize * 2);
+        text("HG warmup instructions", width * 0.5, height * 0.2);
+    }
+    if (stage == 4) { //HG warmup
+        drawMcCollough(color(1), stimSize * 1.35, 6, stimX, stimY, 1);
+        drawFixCross(stimX, stimY);
+        fill(0.85);
+        rect(stimX - stimSize * 1.35 * 0.5 * 1.7, stimY, stimSize * 1.35 * 0.5 * 0.65, stimSize * 1.35 * 0.5 * 0.65);
+        fill(measuredValues[stageToValue[stage]]);
+        rect(stimX + stimSize * 1.35 * 0.5 * 1.7, stimY, stimSize * 1.35 * 0.5 * 0.65, stimSize * 1.35 * 0.5 * 0.65);
+        noFill();
+    }
+    if (stage == 5) { //HG instructions
         fill(1);
         textSize(fontSize * 2);
         text("HG instructions", width * 0.5, height * 0.2);
     }
-    if (stage == 4) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
-            drawFixCross(stimX, stimY);
-            drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-        }
+    if (stage == 6) { //HG nocol a/na pre 1
+        drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
     }
-    if (stage == 5) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
-            drawFixCross(stimX, stimY);
-            drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-        }
+    if (stage == 7) { //HG nocol a/na pre 1
+        drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
     }
-    if (stage == 6) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-            drawFixCross(stimX, stimY);
-            drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-        }
+    if (stage == 8) { //HG nocol a/na pre 2
+        drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
     }
-    if (stage == 7) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-            drawFixCross(stimX, stimY);
-            drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-        }
+    if (stage == 9) { //HG nocol a/na pre 2
+        drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
     }
-    if (stage == 8) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
-            drawFixCross(stimX, stimY);
-            drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-        }
+    if (stage == 10) { //HG below a/na pre 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
     }
-    if (stage == 9) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
-            drawFixCross(stimX, stimY);
-            drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-        }
+    if (stage == 11) { //HG below a/na pre 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
     }
-    if (stage == 10) {
+    if (stage == 12) { //HG below a/na pre 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+    }
+    if (stage == 13) { //HG below a/na pre 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+    }
+    if (stage == 14) { //HG above a/na pre
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+    }
+    if (stage == 15) { //HG above a/na pre
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+    }
+    if (stage == 16) { //calib 2
         runCalibration();
     }
-    if (stage == 11) {
+    if (stage == 17) { //adapt instructions
         fill(1);
         textSize(fontSize * 2);
         text("McCollough adaptation instructions", width * 0.5, height * 0.2);
     }
-    if (stage == adaptStage) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
+    if (stage == adaptStage) { //adapt
+        if (adaptFinished) {
+            fill(1);
+            textSize(fontSize * 2);
+            text("adaptation phase finished", stimX, stimY);
+            noFill();
         }
-        else {
-            if (adaptFinished) {
-                fill(1);
-                textSize(fontSize * 2);
-                text("adaptation phase finished", stimX, stimY);
+        else if (adapt) {
+            if (millis() - adaptMaskSwitchTime < switchDuration) {
+                var flicker = (adaptCounter / 2) % 2;
+                drawMcCollough(adaptColors[flicker], stimSize, mcN, stimX, stimY, flicker);
+                var naDims = getNonadaptDims([-1, 1]);
+                var x = naDims[0];
+                var y = naDims[1];
+                fill(0);
+                stroke(0);
+                rect(x, y, naDims[2], naDims[3]);
                 noFill();
+                noStroke();
+                drawFixCross(stimX, stimY);
             }
-            else if (adapt) {
-                if (millis() - adaptMaskSwitchTime < switchDuration) {
-                    var flicker = (adaptCounter / 2) % 2;
-                    drawMcCollough(adaptColors[flicker], stimSize, mcN, stimX, stimY, flicker);
-                    var naDims = getNonadaptDims([-1, 1]);
-                    var x = naDims[0];
-                    var y = naDims[1];
-                    fill(0);
-                    stroke(0);
-                    rect(x, y, naDims[2], naDims[3]);
-                    noFill();
-                    noStroke();
-                    drawFixCross(stimX, stimY);
-                }
-                else {
-                    adapt = false;
-                    mask = true;
-                    adaptCounter++;
-                    adaptMaskSwitchTime = millis();
-                }
-            }
-            else if (mask) {
-                if (millis() - adaptMaskSwitchTime < maskDuration) {
-                    fill(0);
-                    rect(stimX, stimY, stimSize, stimSize);
-                    noFill();
-                    drawFixCross(stimX, stimY);
-                }
-                else {
-                    adapt = true;
-                    mask = false;
-                    adaptCounter++;
-                    adaptMaskSwitchTime = millis();
-                }
-            }
-            if ((adapt || mask) && adaptDuration * 1000 * 60 < millis() - adaptAwayDuration - adaptStartTime) {
-                endAdaptStage();
+            else {
+                adapt = false;
+                mask = true;
+                adaptCounter++;
+                adaptMaskSwitchTime = millis();
             }
         }
-        rectMode(CORNER);
-        fill(1);
-        rect(width * 0.33, height * 0.05, width * 0.33 - width * 0.33 * constrain((millis() - adaptAwayDuration - adaptStartTime) / (adaptDuration * 60 * 1000), 0, 10 ^ 10), height * 0.02);
-        rectMode(CENTER);
-        noFill();
+        else if (mask) {
+            if (millis() - adaptMaskSwitchTime < maskDuration) {
+                fill(0);
+                rect(stimX, stimY, stimSize, stimSize);
+                noFill();
+                drawFixCross(stimX, stimY);
+            }
+            else {
+                adapt = true;
+                mask = false;
+                adaptCounter++;
+                adaptMaskSwitchTime = millis();
+            }
+        }
+        if ((adapt || mask) && adaptDuration * 1000 * 60 < millis() - adaptAwayDuration - adaptStartTime) {
+            endAdaptStage();
+        }
+        if (adaptFinished == false) {
+            rectMode(CORNER);
+            fill(1);
+            rect(width * 0.33, height * 0.05, width * 0.33 - width * 0.33 * (millis() - adaptAwayDuration - adaptStartTime) / (adaptDuration * 60 * 1000), height * 0.02);
+            rectMode(CENTER);
+            noFill();
+        }
         /*fill(1);
         textSize(fontSize * 2);
         //text(round(adaptDuration * 60 * 1000 - (millis() - adaptAwayDuration - adaptStartTime)), width * 0.5, height * 0.2);
         text(1-(millis() - adaptAwayDuration - adaptStartTime)/(adaptDuration * 60 * 1000), width * 0.5, height * 0.2);*/
     }
-    if (stage == 13) {
+    if (stage == 19) { //HG instructions
         fill(1);
         textSize(fontSize * 2);
         text("HG instructions", width * 0.5, height * 0.2);
     }
-    if (stage == 14) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-            drawFixCross(stimX, stimY);
-            drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-        }
+    if (stage == 20) { //HG below a/na post 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
     }
-    if (stage == 15) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-            drawFixCross(stimX, stimY);
-            drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-        }
+    if (stage == 21) { //HG below a/na post 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
     }
-    if (stage == 16) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
-            drawFixCross(stimX, stimY);
-            drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-        }
+    if (stage == 22) { //HG below a/na post 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
     }
-    if (stage == 17) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
-            drawFixCross(stimX, stimY);
-            drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-        }
+    if (stage == 23) { //HG below a/na post 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
     }
-    if (stage == 18) {
+    if (stage == 24) { //HG above a/na post
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+    }
+    if (stage == 25) { //HG above a/na post
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+    }
+    if (stage == 26) { //calib 3
         runCalibration();
     }
-    if (stage == 19) {
+    if (stage == 27) { //MC test instructions
         fill(1);
         textSize(fontSize * 2);
         text("McCollough test instructions", width * 0.5, height * 0.2);
     }
-    if (stage == 20) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawTest(mcTestOrder()[0]);
-        }
+    if (stage == 28) { //MC test 1
+        drawTest(mcTestOrder()[0]);
     }
-    if (stage == 21) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawTest(mcTestOrder()[1]);
-        }
+    if (stage == 29) { //MC test 2
+        drawTest(mcTestOrder()[1]);
     }
-    if (stage == 22) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawTest(mcTestOrder()[2]);
-        }
+    if (stage == 30) { //MC test 3
+        drawTest(mcTestOrder()[2]);
     }
-    if (stage == 23) {
-        if (discrJudgement == 1) {
-            drawAwayMessage();
-        }
-        else {
-            drawTest(mcTestOrder()[3]);
-        }
+    if (stage == 31) { //MC test 4
+        drawTest(mcTestOrder()[3]);
     }
-    if (stage == endStage) {
+    if (stage == endStage) { //end
         var savedString
         if (saved) {
             savedString = "saved";
@@ -445,6 +418,8 @@ function startTrackingTable() {
     gazeTable.addColumn('frame');
     gazeTable.addColumn('time');
     gazeTable.addColumn('stage');
+    gazeTable.addColumn('stageName');
+    gazeTable.addColumn('stageVal');
     gazeTable.addColumn('discrjudgement');
     gazeTable.addColumn('discrstatus');
     gazeTable.addColumn('pogrx');
@@ -460,6 +435,8 @@ function saveTracking() {
     newRow.setNum('frame', frameCount);
     newRow.setNum('time', millis());
     newRow.setNum('stage', stage);
+    newRow.setString('stageName', stageNames[stage]);
+    newRow.setNum('stageVal', measuredValues[stageToValue[stage]]);
     newRow.setNum('discrjudgement', discrJudgement);
     newRow.setNum('discrstatus', discrStatus);
     newRow.setNum('pogrx', pog[0]);
@@ -497,14 +474,6 @@ function drawDiscrStatus() {
     noFill();
 }
 
-function drawAwayMessage() {
-    fill(1);
-    textSize(fontSize * 2);
-    text("please keep looking at the fixation cross", width * 0.5, height * 0.35);
-    noFill();
-    drawFixCross(stimX, stimY);
-}
-
 function startDiscriminator() {
     discrChangeTime = 0;
     discrStatus = 0;
@@ -527,6 +496,7 @@ function runDiscriminator() {
     else {
         var smoothPog = getSmoothPog(round(getFrameRate() * discrSmoothTime / 1000));
         if (discrDist < dist(smoothPog[0], smoothPog[1], width * 0.5, height * 0.5)) {
+            //if (discrDist < dist(mouseX, mouseY, width * 0.5, height * 0.5)) {
             if (discrStatus == 0) {
                 discrChangeTime = millis();
             }
@@ -554,8 +524,11 @@ function awayJudgement(pre) {
 
 function atJudgement(pre) {
     discrJudgement = 0;
-    if (pre == 1 && stage == adaptStage) {
-        adaptAwayDuration += millis() - discrAwayJudgementTime;
+    if (pre == 1) {
+        discrAwayJudgementTime = -1;
+        if (stage == adaptStage) {
+            adaptAwayDuration += millis() - discrAwayJudgementTime;
+        }
     }
 }
 
@@ -698,50 +671,50 @@ function changeStage(change) {
 
     if (go) {
         stage = constrain(stage + change, startStage, endStage);
-        if (stage == 0) {
+        if (stage == 0) { //start
             adaptDurationInput.show();
             participantInput.show();
         }
-        if (stage == 1) {
+        if (stage == 1) { //calib 1
             prevButton.show();
             adaptDurationInput.hide();
             participantInput.hide();
             participantID = participantInput.value();
             startCalibration(width * calibSize, height * calibSize);
         }
-        if (stage == 2) {
+        if (stage == 2) { //gaze tracking test
             discrOn = true;
             endCalibration();
             startDiscriminator();
         }
-        if (stage == 10) {
+        if (stage == 16) { //calib 2
             startCalibration(width * calibSize, height * calibSize);
         }
-        if (stage == 11) {
+        if (stage == 17) { //adapt instructions
             endCalibration();
         }
-        if (stage == adaptStage) {
+        if (stage == adaptStage) { //adapt
             if (0 < change) {
                 startAdaptStage();
             }
         }
-        if (stage == 13) {
+        if (stage == 19) { // HG instructions
             endAdaptStage();
             if (change < 0) {
                 nextButton.show();
             }
         }
-        if (stage == 18) {
+        if (stage == 26) { // calib 3
             startCalibration(width * calibSize, height * calibSize);
         }
-        if (stage == 19) {
+        if (stage == 27) { // MC test instructions
             endCalibration();
         }
-        if (stage == endStage - 1) {
+        if (stage == endStage - 1) { //MC test 4
             nextButton.hide();
             finishButton.show();
         }
-        if (stage == endStage) {
+        if (stage == endStage) { //end
             if (saved == false) {
                 saveResults();
             }
@@ -777,29 +750,50 @@ function changeSliderValue(change) {
 
 function drawSlider() {
     if (stageToValue[stage] != null) {
-        if (discrJudgement == 0) {
-            sliders[stageToValue[stage]].show();
-            sliders[stageToValue[stage]].position(width * 0.5 - width * 0.4 * 0.5, height * 0.1);
-            sliders[stageToValue[stage]].style("width", width * 0.4 + "px");
-            fill(1);
-            textSize(fontSize);
-            text("< A ", width * 0.35, height * 0.045);
-            text(" D >", width * 0.65, height * 0.045);
-            text("<< J", width * 0.35, height * 0.085);
-            text("L >>", width * 0.65, height * 0.085);
-            noFill();
-        }
-        else {
-            sliders[stageToValue[stage]].hide();
-        }
+        sliders[stageToValue[stage]].show();
+        sliders[stageToValue[stage]].position(width * 0.5 - width * 0.4 * 0.5, height * 0.1);
+        sliders[stageToValue[stage]].style("width", width * 0.4 + "px");
+        fill(1);
+        textSize(fontSize);
+        text("< A ", width * 0.35, height * 0.045);
+        text(" D >", width * 0.65, height * 0.045);
+        text("<< J", width * 0.35, height * 0.085);
+        text("L >>", width * 0.65, height * 0.085);
+        noFill();
     }
 }
 
 function drawFixCross(x, y) {
-    stroke(1);
+    var duration = (millis() - discrAwayJudgementTime) / 1000;
+    var time1 = 3;
+    var time2 = 7;
+    var fixCrossSizeActual;
     strokeWeight(3);
-    line(x - fixCrossSize, y, x + fixCrossSize, y);
-    line(x, y - fixCrossSize, x, y + fixCrossSize);
+    if (discrAwayJudgementTime == -1 || duration < time1) {
+        stroke(1);
+        fixCrossSizeActual = fixCrossSize;
+    }
+    else if (time1 < duration && duration < time2) {
+        if (round(duration * 2) % 2 == 0) {
+            stroke(1, 1, 1, 0);
+        } else {
+            stroke(1);
+        }
+        fixCrossSizeActual = fixCrossSize;
+    }
+    else if (time2 < duration) {
+        if (round(duration * 3) % 2 == 0) {
+            stroke(1, 1, 1, 0);
+        } else {
+            stroke(1);
+        }
+        fixCrossSizeActual = map(duration, time2, time2 * 3, fixCrossSize, fixCrossSize * 2);
+
+    }
+    console.log(round(duration));
+
+    line(x - fixCrossSizeActual, y, x + fixCrossSizeActual, y);
+    line(x, y - fixCrossSizeActual, x, y + fixCrossSizeActual);
     noStroke();
     strokeWeight(1);
 }
@@ -1041,14 +1035,20 @@ function saveResults() {
     resultsTable.addColumn('mcTestOrder');
     resultsTable.addColumn('hrPreTestOrder');
     resultsTable.addColumn('hgPostTestOrder');
-    resultsTable.addColumn('HGnocolPreNa');
-    resultsTable.addColumn('HGnocolPreA');
-    resultsTable.addColumn('HGbelowcolPreNa');
-    resultsTable.addColumn('HGbelowcolPreA');
+    resultsTable.addColumn('HGnocolPreNa1');
+    resultsTable.addColumn('HGnocolPreA1');
+    resultsTable.addColumn('HGnocolPreNa2');
+    resultsTable.addColumn('HGnocolPreA2');
+    resultsTable.addColumn('HGbelowcolPreNa1');
+    resultsTable.addColumn('HGbelowcolPreA1');
+    resultsTable.addColumn('HGbelowcolPreNa2');
+    resultsTable.addColumn('HGbelowcolPreA2');
     resultsTable.addColumn('HGabovecolPreNa');
     resultsTable.addColumn('HGabovecolPreA');
-    resultsTable.addColumn('HGbelowcolPostNa');
-    resultsTable.addColumn('HGbelowcolPostA');
+    resultsTable.addColumn('HGbelowcolPostNa1');
+    resultsTable.addColumn('HGbelowcolPostA1');
+    resultsTable.addColumn('HGbelowcolPostNa2');
+    resultsTable.addColumn('HGbelowcolPostA2');
     resultsTable.addColumn('HGabovecolPostNa');
     resultsTable.addColumn('HGabovecolPostA');
     resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[0] - 1]);
@@ -1063,20 +1063,26 @@ function saveResults() {
     newRow.setNum('mcTestOrder', mcTestOrder());
     newRow.setNum('hrPreTestOrder', hgPreTestOrder());
     newRow.setNum('hgPostTestOrder', hgPostTestOrder());
-    newRow.setNum('HGnocolPreNa', measuredValues[0]);
-    newRow.setNum('HGnocolPreA', measuredValues[1]);
-    newRow.setNum('HGbelowcolPreNa', measuredValues[2]);
-    newRow.setNum('HGbelowcolPreA', measuredValues[3]);
-    newRow.setNum('HGabovecolPreNa', measuredValues[4]);
-    newRow.setNum('HGabovecolPreA', measuredValues[5]);
-    newRow.setNum('HGbelowcolPostNa', measuredValues[6]);
-    newRow.setNum('HGbelowcolPostA', measuredValues[7]);
-    newRow.setNum('HGabovecolPostNa', measuredValues[8]);
-    newRow.setNum('HGabovecolPostA', measuredValues[9]);
-    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[0] - 1], measuredValues[10]);
-    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[1] - 1], measuredValues[11]);
-    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[2] - 1], measuredValues[12]);
-    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[3] - 1], measuredValues[13]);
+    newRow.setNum('HGnocolPreNa1', measuredValues[1]);
+    newRow.setNum('HGnocolPreA1', measuredValues[2]);
+    newRow.setNum('HGnocolPreNa2', measuredValues[3]);
+    newRow.setNum('HGnocolPreA2', measuredValues[4]);
+    newRow.setNum('HGbelowcolPreNa1', measuredValues[5]);
+    newRow.setNum('HGbelowcolPreA1', measuredValues[6]);
+    newRow.setNum('HGbelowcolPreNa2', measuredValues[7]);
+    newRow.setNum('HGbelowcolPreA2', measuredValues[8]);
+    newRow.setNum('HGabovecolPreNa', measuredValues[9]);
+    newRow.setNum('HGabovecolPreA', measuredValues[10]);
+    newRow.setNum('HGbelowcolPostNa1', measuredValues[11]);
+    newRow.setNum('HGbelowcolPostA1', measuredValues[12]);
+    newRow.setNum('HGbelowcolPostNa2', measuredValues[13]);
+    newRow.setNum('HGbelowcolPostA2', measuredValues[14]);
+    newRow.setNum('HGabovecolPostNa', measuredValues[15]);
+    newRow.setNum('HGabovecolPostA', measuredValues[16]);
+    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[0] - 1], measuredValues[17]);
+    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[1] - 1], measuredValues[18]);
+    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[2] - 1], measuredValues[19]);
+    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[3] - 1], measuredValues[20]);
 
     saveTable(resultsTable, 'results_' + participantID + '.csv');
     exportTrackingTable();
