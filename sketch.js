@@ -442,9 +442,9 @@ function saveTracking() {
     newRow.setNum('discrjudgement', discrJudgement);
     newRow.setNum('discrstatus', discrStatus);
     newRow.setNum('pogrx', pog[0]);
-    newRow.setNum('pogry', pog[0]);
-    newRow.setNum('poglx', pog[0]);
-    newRow.setNum('pogly', pog[0]);
+    newRow.setNum('pogry', pog[1]);
+    newRow.setNum('poglx', pog[2]);
+    newRow.setNum('pogly', pog[3]);
     newRow.setNum('mousex', mouseX);
     newRow.setNum('mousey', mouseY);
 }
