@@ -284,50 +284,52 @@ function draw() {
             text("adaptation phase finished", stimX, stimY);
             noFill();
         }
-        else if (adapt) {
-            if (millis() - adaptMaskSwitchTime < switchDuration) {
-                var flicker = (adaptCounter / 2) % 2;
-                drawMcCollough(adaptColors[flicker], stimSize, mcN, stimX, stimY, flicker);
-                var naDims = getNonadaptDims([-1, 1]);
-                var x = naDims[0];
-                var y = naDims[1];
-                fill(0);
-                stroke(0);
-                rect(x, y, naDims[2], naDims[3]);
-                noFill();
-                noStroke();
-                drawFixCross(stimX, stimY);
+        else {
+            if (adapt) {
+                if (millis() - adaptMaskSwitchTime < switchDuration) {
+                    var flicker = (adaptCounter / 2) % 2;
+                    drawMcCollough(adaptColors[flicker], stimSize, mcN, stimX, stimY, flicker);
+                    var naDims = getNonadaptDims([-1, 1]);
+                    var x = naDims[0];
+                    var y = naDims[1];
+                    fill(0);
+                    stroke(0);
+                    rect(x, y, naDims[2], naDims[3]);
+                    noFill();
+                    noStroke();
+                    drawFixCross(stimX, stimY);
+                }
+                else {
+                    adapt = false;
+                    mask = true;
+                    adaptCounter++;
+                    adaptMaskSwitchTime = millis();
+                }
             }
-            else {
-                adapt = false;
-                mask = true;
-                adaptCounter++;
-                adaptMaskSwitchTime = millis();
+            else if (mask) {
+                if (millis() - adaptMaskSwitchTime < maskDuration) {
+                    fill(0);
+                    rect(stimX, stimY, stimSize, stimSize);
+                    noFill();
+                    drawFixCross(stimX, stimY);
+                }
+                else {
+                    adapt = true;
+                    mask = false;
+                    adaptCounter++;
+                    adaptMaskSwitchTime = millis();
+                }
             }
-        }
-        else if (mask) {
-            if (millis() - adaptMaskSwitchTime < maskDuration) {
-                fill(0);
-                rect(stimX, stimY, stimSize, stimSize);
-                noFill();
-                drawFixCross(stimX, stimY);
+            if ((adapt || mask) && adaptDuration * 1000 * 60 < millis() - adaptAwayDuration - adaptStartTime) {
+                endAdaptStage();
             }
-            else {
-                adapt = true;
-                mask = false;
-                adaptCounter++;
-                adaptMaskSwitchTime = millis();
-            }
-        }
-        if ((adapt || mask) && adaptDuration * 1000 * 60 < millis() - adaptAwayDuration - adaptStartTime) {
-            endAdaptStage();
-        }
-        if (adaptFinished == false) {
             rectMode(CORNER);
             fill(1);
             rect(width * 0.33, height * 0.05, width * 0.33 - width * 0.33 * (millis() - adaptAwayDuration - adaptStartTime) / (adaptDuration * 60 * 1000), height * 0.02);
             rectMode(CENTER);
             noFill();
+        }
+        if (adaptFinished == false) {
         }
         /*fill(1);
         textSize(fontSize * 2);
@@ -525,10 +527,10 @@ function awayJudgement(pre) {
 function atJudgement(pre) {
     discrJudgement = 0;
     if (pre == 1) {
-        discrAwayJudgementTime = -1;
         if (stage == adaptStage) {
             adaptAwayDuration += millis() - discrAwayJudgementTime;
         }
+        discrAwayJudgementTime = -1;
     }
 }
 
