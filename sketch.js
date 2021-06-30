@@ -239,33 +239,33 @@ function draw() {
         drawFixCross(stimX, stimY);
         drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
     }
-    if (stage == 10) { //HG below a/na pre 1
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-    }
-    if (stage == 11) { //HG below a/na pre 1
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-    }
-    if (stage == 12) { //HG below a/na pre 2
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-    }
-    if (stage == 13) { //HG below a/na pre 2
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-    }
-    if (stage == 14) { //HG above a/na pre
+    if (stage == 10) { //HG above a/na pre
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
         drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
     }
-    if (stage == 15) { //HG above a/na pre
+    if (stage == 11) { //HG above a/na pre
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+    }
+    if (stage == 12) { //HG below a/na pre 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+    }
+    if (stage == 13) { //HG below a/na pre 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+    }
+    if (stage == 14) { //HG below a/na pre 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+    }
+    if (stage == 15) { //HG below a/na pre 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
         drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
     }
@@ -341,33 +341,33 @@ function draw() {
         textSize(fontSize * 2);
         text("HG instructions", width * 0.5, height * 0.2);
     }
-    if (stage == 20) { //HG below a/na post 1
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-    }
-    if (stage == 21) { //HG below a/na post 1
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-    }
-    if (stage == 22) { //HG below a/na post 2
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-    }
-    if (stage == 23) { //HG below a/na post 2
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-    }
-    if (stage == 24) { //HG above a/na post
+    if (stage == 20) { //HG above a/na post
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
         drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
     }
-    if (stage == 25) { //HG above a/na post
+    if (stage == 21) { //HG above a/na post
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+    }
+    if (stage == 22) { //HG below a/na post 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+    }
+    if (stage == 23) { //HG below a/na post 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+    }
+    if (stage == 24) { //HG below a/na post 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+    }
+    if (stage == 25) { //HG below a/na post 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
         drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
     }
@@ -1069,18 +1069,18 @@ function saveResults() {
     newRow.setNum('HGnocolPreA1', measuredValues[2]);
     newRow.setNum('HGnocolPreNa2', measuredValues[3]);
     newRow.setNum('HGnocolPreA2', measuredValues[4]);
-    newRow.setNum('HGbelowcolPreNa1', measuredValues[5]);
-    newRow.setNum('HGbelowcolPreA1', measuredValues[6]);
-    newRow.setNum('HGbelowcolPreNa2', measuredValues[7]);
-    newRow.setNum('HGbelowcolPreA2', measuredValues[8]);
-    newRow.setNum('HGabovecolPreNa', measuredValues[9]);
-    newRow.setNum('HGabovecolPreA', measuredValues[10]);
-    newRow.setNum('HGbelowcolPostNa1', measuredValues[11]);
-    newRow.setNum('HGbelowcolPostA1', measuredValues[12]);
-    newRow.setNum('HGbelowcolPostNa2', measuredValues[13]);
-    newRow.setNum('HGbelowcolPostA2', measuredValues[14]);
-    newRow.setNum('HGabovecolPostNa', measuredValues[15]);
-    newRow.setNum('HGabovecolPostA', measuredValues[16]);
+    newRow.setNum('HGabovecolPreNa', measuredValues[5]);
+    newRow.setNum('HGabovecolPreA', measuredValues[6]);
+    newRow.setNum('HGbelowcolPreNa1', measuredValues[7]);
+    newRow.setNum('HGbelowcolPreA1', measuredValues[8]);
+    newRow.setNum('HGbelowcolPreNa2', measuredValues[9]);
+    newRow.setNum('HGbelowcolPreA2', measuredValues[10]);
+    newRow.setNum('HGabovecolPostNa', measuredValues[11]);
+    newRow.setNum('HGabovecolPostA', measuredValues[12]);
+    newRow.setNum('HGbelowcolPostNa1', measuredValues[13]);
+    newRow.setNum('HGbelowcolPostA1', measuredValues[14]);
+    newRow.setNum('HGbelowcolPostNa2', measuredValues[15]);
+    newRow.setNum('HGbelowcolPostA2', measuredValues[16]);
     newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[0] - 1], measuredValues[17]);
     newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[1] - 1], measuredValues[18]);
     newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[2] - 1], measuredValues[19]);
