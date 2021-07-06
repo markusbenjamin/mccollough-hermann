@@ -780,38 +780,40 @@ function drawSlider() {
     }
 }
 
-function drawFixCross(x, y) {
-    var duration = (millis() - discrAwayJudgementTime) / 1000;
-    var time1 = 3;
-    var time2 = 7;
-    var fixCrossSizeActual;
-    strokeWeight(3);
-    if (discrAwayJudgementTime == -1 || duration < time1) {
-        stroke(1);
-        fixCrossSizeActual = fixCrossSize;
-    }
-    else if (time1 < duration && duration < time2) {
-        if (round(duration * 2) % 2 == 0) {
-            stroke(1, 1, 1, 0);
-        } else {
+function drawFixCross(x, y) { //DEV
+    if (false) {
+        var duration = (millis() - discrAwayJudgementTime) / 1000;
+        var time1 = 3;
+        var time2 = 7;
+        var fixCrossSizeActual;
+        strokeWeight(3);
+        if (discrAwayJudgementTime == -1 || duration < time1) {
             stroke(1);
+            fixCrossSizeActual = fixCrossSize;
         }
-        fixCrossSizeActual = fixCrossSize;
-    }
-    else if (time2 < duration) {
-        if (round(duration * 3) % 2 == 0) {
-            stroke(1, 1, 1, 0);
-        } else {
-            stroke(1);
+        else if (time1 < duration && duration < time2) {
+            if (round(duration * 2) % 2 == 0) {
+                stroke(1, 1, 1, 0);
+            } else {
+                stroke(1);
+            }
+            fixCrossSizeActual = fixCrossSize;
         }
-        fixCrossSizeActual = map(duration, time2, time2 * 3, fixCrossSize, fixCrossSize * 2);
+        else if (time2 < duration) {
+            if (round(duration * 3) % 2 == 0) {
+                stroke(1, 1, 1, 0);
+            } else {
+                stroke(1);
+            }
+            fixCrossSizeActual = map(duration, time2, time2 * 3, fixCrossSize, fixCrossSize * 2);
 
+        }
+
+        line(x - fixCrossSizeActual, y, x + fixCrossSizeActual, y);
+        line(x, y - fixCrossSizeActual, x, y + fixCrossSizeActual);
+        noStroke();
+        strokeWeight(1);
     }
-
-    line(x - fixCrossSizeActual, y, x + fixCrossSizeActual, y);
-    line(x, y - fixCrossSizeActual, x, y + fixCrossSizeActual);
-    noStroke();
-    strokeWeight(1);
 }
 
 function drawWhiteComparisonRects() {
