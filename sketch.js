@@ -7,14 +7,14 @@ var hgN, hgR, hgVC;
 var mcN;
 var adaptColors, nonadaptColors;
 var adapt, mask, adaptFinished;
-var adaptDuration, switchDuration, adaptCounter, adaptMaskSwitchTime, adaptStartTime, adaptAwayDuration;
+var adaptStageDuration, adaptDuration, adaptCounter, adaptMaskSwitchTime, adaptStartTime, adaptAwayDuration;
 
 var prevButton, nextButton, finishButton;
 
 var stageToValue, measuredValues, measuredValuesDefault, ranges, stageNames;
 var sliders;
 
-var adaptDurationInput, participantInput;
+var adaptStageDurationInput, participantInput;
 
 var saved;
 
@@ -91,8 +91,8 @@ function setParameters() {
     nonadaptColors = [color(0), color(1)];
 
     maskDuration = 500;
-    adaptDuration = 20;
-    switchDuration = 2000;
+    adaptStageDuration = 20;
+    adaptDuration = 2000;
     nonadaptColor = 0;
 
     stageNames = ['start', 'calib 1', 'gaze tracking test', 'HG warmup instructions', 'HG warmup', 'HG instructions 1', 'HG nocol pre a/na 1.1', 'HG nocol pre a/na 1.2', 'HG nocol pre a/na 2.1', 'HG nocol pre a/na 2.2', 'HG below pre a/na 1.1', 'HG below pre a/na 1.2', 'HG below pre a/na 2.1', 'HG below pre a/na 2.2', 'HG above pre a/na', 'HG above pre a/na', 'calib 1', 'adapt instructions', 'adapt', 'HG instructions 2', 'HG below post a/na 1.1', 'HG below post a/na 1.2', 'HG below post a/na 2.1', 'HG below post a/na 2.2', 'HG above post a/na', 'HG above post a/na', 'calib 3', 'MC test instructions', 'MC test 1', 'MC test 2', 'MC test 3', 'MC test 4', 'end'];
@@ -128,8 +128,8 @@ function initialize() {
         sliders[stageToValue[stage]].show();
     }
 
-    adaptDurationInput = createInput(adaptDuration);
-    adaptDurationInput.show();
+    adaptStageDurationInput = createInput(adaptStageDuration);
+    adaptStageDurationInput.show();
     participantInput = createInput();
     participantInput.show();
 
@@ -184,8 +184,8 @@ function draw() {
         textAlign(LEFT);
         textSize(fontSize * 1.5);
         text("adaptation time:", width * 0.3, height * 0.3);
-        adaptDurationInput.position(width * 0.5 - width * 0.1, height * 0.325);
-        styleElement(adaptDurationInput, width * 0.2, height * 0.05, fontSize * 1.5);
+        adaptStageDurationInput.position(width * 0.5 - width * 0.1, height * 0.325);
+        styleElement(adaptStageDurationInput, width * 0.2, height * 0.05, fontSize * 1.5);
 
         text("participant ID:", width * 0.3, height * 0.6);
         participantInput.position(width * 0.5 - width * 0.1, height * 0.625);
@@ -285,8 +285,12 @@ function draw() {
             noFill();
         }
         else {
+            if (discrJudgement == 1) {
+                adaptAwayDuration += millis() - discrAwayJudgementTime;
+                discrAwayJudgementTime = millis();
+            }
             if (adapt) {
-                if (millis() - adaptMaskSwitchTime < switchDuration) {
+                if (millis() - adaptMaskSwitchTime < adaptDuration) {
                     var flicker = (adaptCounter / 2) % 2;
                     drawMcCollough(adaptColors[flicker], stimSize, mcN, stimX, stimY, flicker);
                     var naDims = getNonadaptDims([-1, 1]);
@@ -320,21 +324,19 @@ function draw() {
                     adaptMaskSwitchTime = millis();
                 }
             }
-            if ((adapt || mask) && adaptDuration * 1000 * 60 < millis() - adaptAwayDuration - adaptStartTime) {
+            if ((adapt || mask) && adaptStageDuration * 1000 * 60 < millis() - adaptAwayDuration - adaptStartTime) {
                 endAdaptStage();
             }
             rectMode(CORNER);
             fill(1);
-            rect(width * 0.33, height * 0.05, width * 0.33 - width * 0.33 * (millis() - adaptAwayDuration - adaptStartTime) / (adaptDuration * 60 * 1000), height * 0.02);
+            rect(width * 0.33, height * 0.05, width * 0.33 - width * 0.33 * (millis() - adaptAwayDuration - adaptStartTime) / (adaptStageDuration * 60 * 1000), height * 0.02);
             rectMode(CENTER);
             noFill();
         }
-        if (adaptFinished == false) {
-        }
         /*fill(1);
         textSize(fontSize * 2);
-        //text(round(adaptDuration * 60 * 1000 - (millis() - adaptAwayDuration - adaptStartTime)), width * 0.5, height * 0.2);
-        text(1-(millis() - adaptAwayDuration - adaptStartTime)/(adaptDuration * 60 * 1000), width * 0.5, height * 0.2);*/
+        //text(round(adaptStageDuration * 60 * 1000 - (millis() - adaptAwayDuration - adaptStartTime)), width * 0.5, height * 0.2);
+        text(1-(millis() - adaptAwayDuration - adaptStartTime)/(adaptStageDuration * 60 * 1000), width * 0.5, height * 0.2);*/
     }
     if (stage == 19) { //HG instructions
         fill(1);
@@ -527,9 +529,6 @@ function awayJudgement(pre) {
 function atJudgement(pre) {
     discrJudgement = 0;
     if (pre == 1) {
-        if (stage == adaptStage) {
-            adaptAwayDuration += millis() - discrAwayJudgementTime;
-        }
         discrAwayJudgementTime = -1;
     }
 }
@@ -649,7 +648,7 @@ function startAdaptStage() {
     adaptMaskSwitchTime = millis();
     adaptStartTime = millis();
     adaptAwayDuration = 0;
-    adaptDuration = adaptDurationInput.value();
+    adaptStageDuration = adaptStageDurationInput.value();
 }
 
 function endAdaptStage() {
@@ -674,12 +673,12 @@ function changeStage(change) {
     if (go) {
         stage = constrain(stage + change, startStage, endStage);
         if (stage == 0) { //start
-            adaptDurationInput.show();
+            adaptStageDurationInput.show();
             participantInput.show();
         }
         if (stage == 1) { //calib 1
             prevButton.show();
-            adaptDurationInput.hide();
+            adaptStageDurationInput.hide();
             participantInput.hide();
             participantID = participantInput.value();
             startCalibration(width * calibSize, height * calibSize);
@@ -1033,7 +1032,7 @@ function saveResults() {
 
     resultsTable.addColumn('participantID');
     resultsTable.addColumn('expDuration');
-    resultsTable.addColumn('adaptDuration');
+    resultsTable.addColumn('adaptStageDuration');
     resultsTable.addColumn('mcTestOrder');
     resultsTable.addColumn('hrPreTestOrder');
     resultsTable.addColumn('hgPostTestOrder');
@@ -1061,7 +1060,7 @@ function saveResults() {
     let newRow = resultsTable.addRow();
     newRow.setNum('participantID', participantID);
     newRow.setNum('expDuration', millis() / 1000 / 60);
-    newRow.setNum('adaptDuration', adaptDuration);
+    newRow.setNum('adaptStageDuration', adaptStageDuration);
     newRow.setNum('mcTestOrder', mcTestOrder());
     newRow.setNum('hrPreTestOrder', hgPreTestOrder());
     newRow.setNum('hgPostTestOrder', hgPostTestOrder());
