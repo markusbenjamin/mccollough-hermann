@@ -286,7 +286,7 @@ function draw() {
             noFill();
         }
         else {
-            if (discrJudgement == 1 && discrAwayJudgementAccumulator != -1) {
+            if (discrJudgement != 0 && discrAwayJudgementAccumulator != -1) {
                 adaptAwayDuration += millis() - discrAwayJudgementAccumulator;
                 discrAwayJudgementAccumulator = millis();
             }
@@ -421,7 +421,7 @@ function draw() {
 
     saveTracking();
 
-    console.log("avokádó");
+    console.log("mangó");
 }
 
 function startTrackingTable() {
