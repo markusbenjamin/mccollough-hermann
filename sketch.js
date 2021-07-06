@@ -814,6 +814,8 @@ function drawFixCross(x, y) { //DEV
         noStroke();
         strokeWeight(1);
     }
+    noStroke();
+    strokeWeight(1);
 }
 
 function drawWhiteComparisonRects() {
