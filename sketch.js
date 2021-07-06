@@ -285,7 +285,7 @@ function draw() {
             noFill();
         }
         else {
-            if (discrJudgement == 1) {
+            if (discrJudgement == 1 && discrAwayJudgementTime != -1) {
                 adaptAwayDuration += millis() - discrAwayJudgementTime;
                 discrAwayJudgementTime = millis();
             }
