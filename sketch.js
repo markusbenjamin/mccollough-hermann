@@ -421,7 +421,7 @@ function draw() {
 
     saveTracking();
 
-    console.log("citrom");
+    console.log("avokádó");
 }
 
 function startTrackingTable() {
@@ -502,7 +502,7 @@ function stopDiscriminator() {
 function runDiscriminator() {
     if (isNaN(pog[0])) {
         discrStatus = -1;
-        discrJudgement = -1;
+        makeJudgement(-1, discrJudgement);
     }
     else {
         var smoothPog = getSmoothPog(round(getFrameRate() * discrSmoothTime / 1000));
@@ -518,27 +518,38 @@ function runDiscriminator() {
         }
 
         if (discrStatus == 1 && discrAwayStatusDuration < millis() - discrChangeTime) {
-            awayJudgement(discrJudgement);
+            makeJudgement(1, discrJudgement);
         }
         else {
-            atJudgement(discrJudgement);
+            makeJudgement(0, discrJudgement);
         }
     }
 }
 
-function awayJudgement(pre) {
-    discrJudgement = 1;
-    if (pre == 0) {
-        discrAwayJudgementTime = millis();
-        discrAwayJudgementAccumulator = millis();
+function makeJudgement(now, pre) {
+    discrJudgement = now;
+    if (now == 0) {
+        if (pre == 1) {
+            discrAwayJudgementTime = -1;
+            discrAwayJudgementAccumulator = -1;
+        }
+        if (pre == -1) {
+            discrAwayJudgementTime = -1;
+            discrAwayJudgementAccumulator = -1;
+        }
     }
-}
+    if (now == 1) {
+        if (pre == 0) {
+            discrAwayJudgementTime = millis();
+            discrAwayJudgementAccumulator = millis();
+        }
+    }
+    if (now == -1) {
 
-function atJudgement(pre) {
-    discrJudgement = 0;
-    if (pre == 1) {
-        discrAwayJudgementTime = -1;
-        discrAwayJudgementAccumulator = -1;
+        if (pre == 0) {
+            discrAwayJudgementTime = millis();
+            discrAwayJudgementAccumulator = millis();
+        }
     }
 }
 
