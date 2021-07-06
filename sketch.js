@@ -1055,18 +1055,19 @@ function saveResults() {
     resultsTable.addColumn('HGnocolPreA1');
     resultsTable.addColumn('HGnocolPreNa2');
     resultsTable.addColumn('HGnocolPreA2');
+    resultsTable.addColumn('HGabovecolPreNa');
+    resultsTable.addColumn('HGabovecolPreA');
     resultsTable.addColumn('HGbelowcolPreNa1');
     resultsTable.addColumn('HGbelowcolPreA1');
     resultsTable.addColumn('HGbelowcolPreNa2');
     resultsTable.addColumn('HGbelowcolPreA2');
-    resultsTable.addColumn('HGabovecolPreNa');
-    resultsTable.addColumn('HGabovecolPreA');
+    resultsTable.addColumn('HGabovecolPostNa');
+    resultsTable.addColumn('HGabovecolPostA');
     resultsTable.addColumn('HGbelowcolPostNa1');
     resultsTable.addColumn('HGbelowcolPostA1');
     resultsTable.addColumn('HGbelowcolPostNa2');
     resultsTable.addColumn('HGbelowcolPostA2');
-    resultsTable.addColumn('HGabovecolPostNa');
-    resultsTable.addColumn('HGabovecolPostA');
+
     resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[0] - 1]);
     resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[1] - 1]);
     resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[2] - 1]);
