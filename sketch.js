@@ -154,6 +154,7 @@ function initialize() {
     startTrackingTable();
 
     discrAwayJudgementTime = -1;
+    discrAwayJudgementAccumulator = -1;
 }
 
 function calculateSizes() {
@@ -333,6 +334,10 @@ function draw() {
             rectMode(CENTER);
             noFill();
         }
+        fill(1);
+        textSize(fontSize * 2);
+        text(discrJudgement, stimX, stimY);
+        noFill();
         /*fill(1);
         textSize(fontSize * 2);
         //text(round(adaptStageDuration * 60 * 1000 - (millis() - adaptAwayDuration - adaptStartTime)), width * 0.5, height * 0.2);
@@ -416,7 +421,7 @@ function draw() {
 
     saveTracking();
 
-    console.log("barack");
+    console.log("citrom");
 }
 
 function startTrackingTable() {
