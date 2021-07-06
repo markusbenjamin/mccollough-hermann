@@ -57,7 +57,7 @@ var pogSmooth;
 //discriminator
 var discrOn;
 var discrDist;
-var discrAwayStatusDuration, discrAwayJudgementTime;
+var discrAwayStatusDuration, discrAwayJudgementTime, discrAwayJudgementAccumulator;
 var discrChangeTime;
 var discrJudgement;
 var discrStatus;
@@ -285,9 +285,9 @@ function draw() {
             noFill();
         }
         else {
-            if (discrJudgement == 1 && discrAwayJudgementTime != -1) {
-                adaptAwayDuration += millis() - discrAwayJudgementTime;
-                discrAwayJudgementTime = millis();
+            if (discrJudgement == 1 && discrAwayJudgementAccumulator != -1) {
+                adaptAwayDuration += millis() - discrAwayJudgementAccumulator;
+                discrAwayJudgementAccumulator = millis();
             }
             if (adapt) {
                 if (millis() - adaptMaskSwitchTime < adaptDuration) {
@@ -416,7 +416,7 @@ function draw() {
 
     saveTracking();
 
-    console.log("alma");
+    console.log("barack");
 }
 
 function startTrackingTable() {
@@ -525,6 +525,7 @@ function awayJudgement(pre) {
     discrJudgement = 1;
     if (pre == 0) {
         discrAwayJudgementTime = millis();
+        discrAwayJudgementAccumulator = millis();
     }
 }
 
@@ -532,6 +533,7 @@ function atJudgement(pre) {
     discrJudgement = 0;
     if (pre == 1) {
         discrAwayJudgementTime = -1;
+        discrAwayJudgementAccumulator = -1;
     }
 }
 
