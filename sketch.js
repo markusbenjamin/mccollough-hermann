@@ -416,7 +416,7 @@ function draw() {
 
     saveTracking();
 
-    console.log("körte");
+    console.log("alma");
 }
 
 function startTrackingTable() {
