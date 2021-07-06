@@ -415,6 +415,8 @@ function draw() {
     styleElement(finishButton, width * 0.1, height * 0.08, fontSize);
 
     saveTracking();
+
+    console.log("körte");
 }
 
 function startTrackingTable() {
@@ -791,7 +793,6 @@ function drawFixCross(x, y) {
         fixCrossSizeActual = map(duration, time2, time2 * 3, fixCrossSize, fixCrossSize * 2);
 
     }
-    console.log(round(duration));
 
     line(x - fixCrossSizeActual, y, x + fixCrossSizeActual, y);
     line(x, y - fixCrossSizeActual, x, y + fixCrossSizeActual);
