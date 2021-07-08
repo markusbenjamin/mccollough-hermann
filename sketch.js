@@ -8,6 +8,7 @@ var mcN;
 var adaptColors, nonadaptColors;
 var adapt, mask, adaptFinished;
 var adaptStageDuration, adaptDuration, adaptCounter, adaptMaskSwitchTime, adaptStartTime, adaptAwayDuration;
+var freeViewing;
 
 var prevButton, nextButton, finishButton;
 
@@ -99,6 +100,8 @@ function setParameters() {
     stageToValue = [null, null, null, null, 0, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, null, null, null, null, 11, 12, 13, 14, 15, 16, null, null, 17, 18, 19, 20, null];
     measuredValues = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0];
     ranges = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]];
+
+    freeViewing = false;
 }
 
 function initialize() {
@@ -417,7 +420,12 @@ function draw() {
 
     saveTracking();
 
-    console.log("barack");
+    if (freeViewing) {
+        console.log("free viewing")
+    }
+    else {
+        console.log("fix cross");
+    }
 }
 
 function startTrackingTable() {
@@ -781,7 +789,7 @@ function drawSlider() {
 }
 
 function drawFixCross(x, y) { //DEV
-    if (false) {
+    if (freeViewing == false) {
         var duration = (millis() - discrAwayJudgementTime) / 1000;
         var time1 = 3;
         var time2 = 7;
