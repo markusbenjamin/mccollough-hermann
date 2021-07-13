@@ -1004,44 +1004,30 @@ function drawMcBaseline(which) {//DEV
 }
 
 function drawMcTest(which) {
-    if (which == 1) {
+    if (which == 1) {//h, g, na
         drawWhiteComparisonRects();
         drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
         drawMcTestMask([-1, 1]);
         drawFixCross(stimX, stimY);
     }
-    if (which == 2) {
+    if (which == 2) {//h, g, a
         drawWhiteComparisonRects();
         drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
         drawMcTestMask([1, -1]);
         drawFixCross(stimX, stimY);
     }
-    if (which == 3) {
+    if (which == 3) {//v, r, na
         drawWhiteComparisonRects();
         drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
         drawMcTestMask([-1, 1]);
         drawFixCross(stimX, stimY);
     }
-    if (which == 4) {
+    if (which == 4) {//v, r, a
         drawWhiteComparisonRects();
         drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
         drawMcTestMask([1, -1]);
         drawFixCross(stimX, stimY);
     }
-}
-
-function hgPreTestOrder() {
-    return [
-        [0, 1],
-        [1, 0]
-    ][(participantID - 1) % 2]
-}
-
-function hgPostTestOrder() {
-    return [
-        [0, 1],
-        [1, 0]
-    ][(participantID - 1) % 2]
 }
 
 function drawMcTestMask(placing) {
@@ -1061,7 +1047,21 @@ function drawMcTestMask(placing) {
     noStroke();
 }
 
-function saveResults() {//DEV
+function hgPreTestOrder() {
+    return [
+        [0, 1],
+        [1, 0]
+    ][(participantID - 1) % 2]
+}
+
+function hgPostTestOrder() {
+    return [
+        [0, 1],
+        [1, 0]
+    ][(participantID - 1) % 2]
+}
+
+function saveResults() {//DEV: új stagek + mentse a baseline és a test sorrendet
     var resultsTable = new p5.Table();
 
     resultsTable.addColumn('participantID');
@@ -1087,10 +1087,16 @@ function saveResults() {//DEV
     resultsTable.addColumn('HGbelowcolPostNa2');
     resultsTable.addColumn('HGbelowcolPostA2');
 
-    resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[0] - 1]);
+    //DEV inkább ugyanolyan sorrendbe mentse és külön kódolja, hogy mi volt a sorrend
+    /*resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[0] - 1]); 
     resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[1] - 1]);
     resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[2] - 1]);
-    resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[3] - 1]);
+    resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[3] - 1]);*/
+
+    resultsTable.addColumn('MCtesthNA'); 
+    resultsTable.addColumn('MCtesthA');
+    resultsTable.addColumn('MCtestvNA');
+    resultsTable.addColumn('MCtestvA');
 
     let newRow = resultsTable.addRow();
     newRow.setNum('participantID', participantID);
@@ -1115,10 +1121,10 @@ function saveResults() {//DEV
     newRow.setNum('HGbelowcolPostA1', measuredValues[14]);
     newRow.setNum('HGbelowcolPostNa2', measuredValues[15]);
     newRow.setNum('HGbelowcolPostA2', measuredValues[16]);
-    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[0] - 1], measuredValues[17]);
-    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[1] - 1], measuredValues[18]);
-    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[2] - 1], measuredValues[19]);
-    newRow.setNum('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[3] - 1], measuredValues[20]);
+    newRow.setNum('MCtest' + ['hNA', 'hA', 'vNA', 'vA'][mcTestOrder()[0] - 1], measuredValues[17]);
+    newRow.setNum('MCtest' + ['hNA', 'hA', 'vNA', 'vA'][mcTestOrder()[1] - 1], measuredValues[18]);
+    newRow.setNum('MCtest' + ['hNA', 'hA', 'vNA', 'vA'][mcTestOrder()[2] - 1], measuredValues[19]);
+    newRow.setNum('MCtest' + ['hNA', 'hA', 'vNA', 'vA'][mcTestOrder()[3] - 1], measuredValues[20]);
 
     saveTable(resultsTable, 'results_' + participantID + '.csv');
     exportTrackingTable();
