@@ -81,7 +81,7 @@ function windowResized() {
     calculateSizes();
 }
 
-function setParameters() {
+function setParameters() {//DEV
     hgN = 7;
     hgR = 1 / 3;
     hgVC = color(1, 0.25, 1);
@@ -101,7 +101,7 @@ function setParameters() {
     measuredValues = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0];
     ranges = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]];
 
-    freeViewing = true;
+    freeViewing = false;
 }
 
 function initialize() {
@@ -173,7 +173,7 @@ function calculateSizes() {
     calibDotSize = width * 0.01;
 }
 
-function draw() {
+function draw() {//DEV
     readSliderValue();
     background(0);
     drawSlider();
@@ -386,16 +386,16 @@ function draw() {
         text("McCollough test instructions", width * 0.5, height * 0.2);
     }
     if (stage == 28) { //MC test 1
-        drawTest(mcTestOrder()[0]);
+        drawMcTest(mcTestOrder()[0]);
     }
     if (stage == 29) { //MC test 2
-        drawTest(mcTestOrder()[1]);
+        drawMcTest(mcTestOrder()[1]);
     }
     if (stage == 30) { //MC test 3
-        drawTest(mcTestOrder()[2]);
+        drawMcTest(mcTestOrder()[2]);
     }
     if (stage == 31) { //MC test 4
-        drawTest(mcTestOrder()[3]);
+        drawMcTest(mcTestOrder()[3]);
     }
     if (stage == endStage) { //end
         var savedString
@@ -687,7 +687,7 @@ function goToPrevStage() {
     changeStage(-1);
 }
 
-function changeStage(change) {
+function changeStage(change) {//DEV
     var go = true;
 
     if (stage == 0 && participantInput.value() == '') {
@@ -788,7 +788,7 @@ function drawSlider() {
     }
 }
 
-function drawFixCross(x, y) { //DEV
+function drawFixCross(x, y) {
     if (freeViewing == false) {
         var duration = (millis() - discrAwayJudgementTime) / 1000;
         var time1 = 3;
@@ -983,6 +983,10 @@ function drawMcCollough(c, s, m, x, y, o) {
     noFill();
 }
 
+function mcBaselineOrder(){//DEV
+
+}
+
 function mcTestOrder() {
     return [
         [1, 2, 3, 4],
@@ -994,6 +998,36 @@ function mcTestOrder() {
         [3, 4, 2, 1],
         [4, 3, 2, 1]
     ][(participantID - 1) % 8];
+}
+
+function drawMcBaseline(which) {//DEV
+}
+
+function drawMcTest(which) {
+    if (which == 1) {
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
+        drawMcTestMask([-1, 1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 2) {
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
+        drawMcTestMask([1, -1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 3) {
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
+        drawMcTestMask([-1, 1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 4) {
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
+        drawMcTestMask([1, -1]);
+        drawFixCross(stimX, stimY);
+    }
 }
 
 function hgPreTestOrder() {
@@ -1010,34 +1044,7 @@ function hgPostTestOrder() {
     ][(participantID - 1) % 2]
 }
 
-function drawTest(which) {
-    if (which == 1) {
-        drawWhiteComparisonRects();
-        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
-        drawTestMask([-1, 1]);
-        drawFixCross(stimX, stimY);
-    }
-    if (which == 2) {
-        drawWhiteComparisonRects();
-        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
-        drawTestMask([1, -1]);
-        drawFixCross(stimX, stimY);
-    }
-    if (which == 3) {
-        drawWhiteComparisonRects();
-        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
-        drawTestMask([-1, 1]);
-        drawFixCross(stimX, stimY);
-    }
-    if (which == 4) {
-        drawWhiteComparisonRects();
-        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
-        drawTestMask([1, -1]);
-        drawFixCross(stimX, stimY);
-    }
-}
-
-function drawTestMask(placing) {
+function drawMcTestMask(placing) {
     var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
     var naDims = getNonadaptDims(placing);
 
@@ -1054,7 +1061,7 @@ function drawTestMask(placing) {
     noStroke();
 }
 
-function saveResults() {
+function saveResults() {//DEV
     var resultsTable = new p5.Table();
 
     resultsTable.addColumn('participantID');
