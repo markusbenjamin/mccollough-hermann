@@ -1222,6 +1222,7 @@ function drawMcBaselineMask(placing) {
     var naDims = getNonadaptDims(placing);
 
     fill(0);
+    stroke(0);
     rect(stimX, stimY - placing[0] * stimSize * 0.25, stimSize, stimSize * 0.5);
     rect(stimX - placing[1] * stimSize * 0.25, stimY + placing[1] * stimSize * 0.25, stimSize * 0.5, stimSize * 0.5);
     var translate = (naDims[3] + hgDims[0] + hgDims[1]) * 0.5;
