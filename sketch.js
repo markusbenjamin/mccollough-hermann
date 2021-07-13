@@ -14,6 +14,9 @@ var prevButton, nextButton, finishButton;
 
 var stageToValue, measuredValues, measuredValuesDefault, ranges, stageNames;
 var sliders;
+var hgPreNullOrder, hgPostNullOrder;
+var mcBaselineNameNullOrder, mcBaselineStartValNullOrder;
+var mcTestNameNullOrder, mcTestStartValNullOrder;
 
 var adaptStageDurationInput, participantInput;
 
@@ -81,7 +84,7 @@ function windowResized() {
     calculateSizes();
 }
 
-function setParameters() {//DEV
+function setParameters() {
     hgN = 7;
     hgR = 1 / 3;
     hgVC = color(1, 0.25, 1);
@@ -96,10 +99,8 @@ function setParameters() {//DEV
     adaptDuration = 2000;
     nonadaptColor = 0;
 
-    stageNames = ['start', 'calib 1', 'gaze tracking test', 'HG warmup instructions', 'HG warmup', 'HG instructions 1', 'HG nocol pre a/na 1.1', 'HG nocol pre a/na 1.2', 'HG nocol pre a/na 2.1', 'HG nocol pre a/na 2.2', 'HG below pre a/na 1.1', 'HG below pre a/na 1.2', 'HG below pre a/na 2.1', 'HG below pre a/na 2.2', 'HG above pre a/na', 'HG above pre a/na', 'calib 1', 'adapt instructions', 'adapt', 'HG instructions 2', 'HG below post a/na 1.1', 'HG below post a/na 1.2', 'HG below post a/na 2.1', 'HG below post a/na 2.2', 'HG above post a/na', 'HG above post a/na', 'calib 3', 'MC test instructions', 'MC test 1', 'MC test 2', 'MC test 3', 'MC test 4', 'end'];
-    stageToValue = [null, null, null, null, 0, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, null, null, null, null, 11, 12, 13, 14, 15, 16, null, null, 17, 18, 19, 20, null];
-    measuredValues = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0];
-    ranges = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]];
+    stageToValue = [null, null, null, null, 0, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, null, 11, 12, 13, 14, 15, 16, 17, 18, null, null, null, null, 19, 20, 21, 22, 23, 24, null, null, 25, 26, 27, 28, 29, 30, 31, 32, null];
+    ranges = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]];
 
     freeViewing = false;
 }
@@ -109,8 +110,8 @@ function initialize() {
 
     stage = 0;
     startStage = 0;
-    endStage = 32;
-    adaptStage = 18;
+    endStage = 45;
+    adaptStage = 27;
 
     prevButton = createButton('Prev stage');
     prevButton.mousePressed(goToPrevStage);
@@ -121,15 +122,6 @@ function initialize() {
     finishButton = createButton('Finish');
     finishButton.mousePressed(saveResults);
     finishButton.hide();
-
-    sliders = [];
-    for (var i = 0; i < measuredValues.length; i++) {
-        sliders.push(createSlider(ranges[i][0], ranges[i][1], measuredValues[i], 1 / 1000));
-        sliders[i].hide();
-    }
-    if (stageToValue[stage] != null) {
-        sliders[stageToValue[stage]].show();
-    }
 
     adaptStageDurationInput = createInput(adaptStageDuration);
     adaptStageDurationInput.show();
@@ -158,6 +150,119 @@ function initialize() {
 
     discrAwayJudgementTime = -1;
     discrAwayJudgementAccumulator = -1;
+
+    hgPreNullOrder = ['NA', 'A'];
+    hgPostNullOrder = ['NA', 'A'];
+    mcBaselineNameNullOrder = ['hLU', 'hRD', 'vLU', 'vRD'];
+    mcBaselineStartValNullOrder = [1, 1, -1, -1];
+    mcTestNameNullOrder = ['hNA', 'hA', 'vNA', 'vA'];
+    mcTestStartValNullOrder = [-1, -1, 1, 1];
+}
+
+function setParticipantDependentStageSettings() {
+    var hgPreStageNames = selectFromArray(hgPreNullOrder, hgPreOrder());
+    var hgPostStageNames = selectFromArray(hgPostNullOrder, hgPostOrder());
+    var mcBaselineStageNames = selectFromArray(mcBaselineNameNullOrder, mcBaselineOrder());
+    var mcTestStageNames = selectFromArray(mcTestNameNullOrder, mcTestOrder());
+
+    stageNames = [
+        'start', // 0
+        'calib 1', // 1
+        'gaze tracking test', // 2
+        'HG warmup instructions', // 3
+        'HG warmup', // 4
+        'HG instructions 1', // 5
+        'HG nocol pre ' + hgPreStageNames[0] + ' 1', // 6
+        'HG nocol pre ' + hgPreStageNames[1] + ' 2', // 7
+        'HG nocol pre ' + hgPreStageNames[0] + '1', // 8
+        'HG nocol pre ' + hgPreStageNames[1] + ' 2', // 9
+        'HG below pre ' + hgPreStageNames[0] + '1', // 12
+        'HG below pre ' + hgPreStageNames[1] + ' 2', // 13
+        'HG below pre ' + hgPreStageNames[0] + '1', // 14
+        'HG below pre ' + hgPreStageNames[1] + ' 2', // 15
+        'HG above pre ' + hgPreStageNames[0], // 10
+        'HG above pre ' + hgPreStageNames[1], // 11
+        'MC baseline instructions', // 12
+        'MC baseline ' + mcBaselineStageNames[0], // 13
+        'MC baseline ' + mcBaselineStageNames[1], // 14
+        'MC baseline ' + mcBaselineStageNames[2], // 15
+        'MC baseline ' + mcBaselineStageNames[3], // 16
+        'MC baseline ' + mcBaselineStageNames[0], // 17
+        'MC baseline ' + mcBaselineStageNames[1], // 18
+        'MC baseline ' + mcBaselineStageNames[2], // 19
+        'MC baseline ' + mcBaselineStageNames[3], // 20
+        'calib 2', // 21
+        'adapt instructions', // 22
+        'adapt', // 23
+        'HG instructions 2', // 24
+        'HG below post ' + hgPostStageNames[0] + ' 1', // 25
+        'HG below post ' + hgPostStageNames[1] + ' 2', // 26
+        'HG below postt ' + hgPostStageNames[0] + ' 1', // 25
+        'HG below post ' + hgPostStageNames[1] + ' 2', // 27
+        'HG above post t ' + hgPostStageNames[0], // 28
+        'HG above post ' + hgPostStageNames[1], // 29
+        'calib 3', // 30
+        'MC test instructions', // 31
+        'MC test ' + mcTestStageNames[0], // 32
+        'MC test ' + mcTestStageNames[1], // 33
+        'MC test ' + mcTestStageNames[2], // 34
+        'MC test ' + mcTestStageNames[3], // 35
+        'MC test ' + mcTestStageNames[0], // 36
+        'MC test ' + mcTestStageNames[1], // 37
+        'MC test ' + mcTestStageNames[2], // 38
+        'MC test ' + mcTestStageNames[3], // 39
+        'end'  // 40
+    ];
+
+    var mcBaselineStartVals = selectFromArray(mcBaselineStartValNullOrder, mcBaselineOrder());
+    var mcTestStartVals = selectFromArray(mcTestStartValNullOrder, mcTestOrder());
+
+    measuredValues = [
+        0.5, // 0 4
+        0.5, // 1 6
+        0.5, // 2 7
+        0.5, // 3 8
+        0.5, // 4 9
+        0.5, // 5 12
+        0.5, // 6 13
+        0.5, // 7 14
+        0.5, // 8 15
+        0.5, // 9 10
+        0.5, // 10 11
+        mcBaselineStartVals[0], // 11 13
+        mcBaselineStartVals[1], // 12 14
+        mcBaselineStartVals[2], // 13 15
+        mcBaselineStartVals[3], // 14 16
+        mcBaselineStartVals[0], // 15 17
+        mcBaselineStartVals[1], // 16 18
+        mcBaselineStartVals[2], // 17 19
+        mcBaselineStartVals[3], // 18 20
+        0.5, // 19 25
+        0.5, // 20 26
+        0.5, // 21 25
+        0.5, // 22 27
+        0.5, // 23 28
+        0.5, // 24 29
+        mcTestStartVals[0], // 25 32
+        mcTestStartVals[1], // 26 33
+        mcTestStartVals[2], // 27 34
+        mcTestStartVals[3], // 28 35
+        mcTestStartVals[0], // 29 36
+        mcTestStartVals[1], // 30 37
+        mcTestStartVals[2], // 31 38
+        mcTestStartVals[3]  // 32 39
+    ];
+}
+
+function createSliders() {
+    sliders = [];
+    for (var i = 0; i < measuredValues.length; i++) {
+        sliders.push(createSlider(ranges[i][0], ranges[i][1], measuredValues[i], 1 / 1000));
+        sliders[i].hide();
+    }
+    if (stageToValue[stage] != null) {
+        sliders[stageToValue[stage]].show();
+    }
 }
 
 function calculateSizes() {
@@ -173,10 +278,12 @@ function calculateSizes() {
     calibDotSize = width * 0.01;
 }
 
-function draw() {//DEV
-    readSliderValue();
+function draw() {
     background(0);
-    drawSlider();
+    if (1 < stage) {
+        readSliderValue();
+        drawSlider();
+    }
     if (discrOn) {
         runDiscriminator();
     }
@@ -218,7 +325,7 @@ function draw() {//DEV
         rect(stimX + stimSize * 1.35 * 0.5 * 1.7, stimY, stimSize * 1.35 * 0.5 * 0.65, stimSize * 1.35 * 0.5 * 0.65);
         noFill();
     }
-    if (stage == 5) { //HG instructions
+    if (stage == 5) { //HG instructions 1
         fill(1);
         textSize(fontSize * 2);
         text("HG instructions", width * 0.5, height * 0.2);
@@ -226,57 +333,86 @@ function draw() {//DEV
     if (stage == 6) { //HG nocol a/na pre 1
         drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
     }
     if (stage == 7) { //HG nocol a/na pre 1
         drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
     }
     if (stage == 8) { //HG nocol a/na pre 2
         drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
     }
     if (stage == 9) { //HG nocol a/na pre 2
         drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
     }
-    if (stage == 10) { //HG above a/na pre
+    if (stage == 10) { //HG below a/na pre 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+    }
+    if (stage == 11) { //HG below a/na pre 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+    }
+    if (stage == 12) { //HG below a/na pre 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+    }
+    if (stage == 13) { //HG below a/na pre 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+    }
+    if (stage == 14) { //HG above a/na pre
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
     }
-    if (stage == 11) { //HG above a/na pre
+    if (stage == 15) { //HG above a/na pre
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
     }
-    if (stage == 12) { //HG below a/na pre 1
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+    if (stage == 16) { //MC baseline instructions
+        fill(1);
+        textSize(fontSize * 2);
+        text("MC baseline instructions", width * 0.5, height * 0.2);
     }
-    if (stage == 13) { //HG below a/na pre 1
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+    if (stage == 17) { //MC baseline 1.1
+        drawMcBaseline(mcBaselineOrder()[0]);
     }
-    if (stage == 14) { //HG below a/na pre 2
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+    if (stage == 18) { //MC baseline 2.1
+        drawMcBaseline(mcBaselineOrder()[1]);
     }
-    if (stage == 15) { //HG below a/na pre 2
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+    if (stage == 19) { //MC baseline 3.1
+        drawMcBaseline(mcBaselineOrder()[2]);
     }
-    if (stage == 16) { //calib 2
+    if (stage == 20) { //MC baseline 4.1
+        drawMcBaseline(mcBaselineOrder()[3]);
+    }
+    if (stage == 21) { //MC baseline 1.2
+        drawMcBaseline(mcBaselineOrder()[0]);
+    }
+    if (stage == 22) { //MC baseline 2.2
+        drawMcBaseline(mcBaselineOrder()[1]);
+    }
+    if (stage == 23) { //MC baseline 3.2
+        drawMcBaseline(mcBaselineOrder()[2]);
+    }
+    if (stage == 24) { //MC baseline 4.2
+        drawMcBaseline(mcBaselineOrder()[3]);
+    }
+    if (stage == 25) { //calib 2
         runCalibration();
     }
-    if (stage == 17) { //adapt instructions
+    if (stage == 26) { //adapt instructions
         fill(1);
         textSize(fontSize * 2);
         text("McCollough adaptation instructions", width * 0.5, height * 0.2);
@@ -342,59 +478,71 @@ function draw() {//DEV
         //text(round(adaptStageDuration * 60 * 1000 - (millis() - adaptAwayDuration - adaptStartTime)), width * 0.5, height * 0.2);
         text(1-(millis() - adaptAwayDuration - adaptStartTime)/(adaptStageDuration * 60 * 1000), width * 0.5, height * 0.2);*/
     }
-    if (stage == 19) { //HG instructions
+    if (stage == 28) { //HG instructions 2
         fill(1);
         textSize(fontSize * 2);
         text("HG instructions", width * 0.5, height * 0.2);
     }
-    if (stage == 20) { //HG above a/na post
+    if (stage == 29) { //HG below a/na post 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+    }
+    if (stage == 30) { //HG below a/na post 1
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+    }
+    if (stage == 31) { //HG below a/na post 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+    }
+    if (stage == 32) { //HG below a/na post 2
+        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
+        drawFixCross(stimX, stimY);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+    }
+    if (stage == 33) { //HG above a/na post
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
     }
-    if (stage == 21) { //HG above a/na post
+    if (stage == 34) { //HG above a/na post
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
     }
-    if (stage == 22) { //HG below a/na post 1
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-    }
-    if (stage == 23) { //HG below a/na post 1
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-    }
-    if (stage == 24) { //HG below a/na post 2
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[0]]);
-    }
-    if (stage == 25) { //HG below a/na post 2
-        drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
-        drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreTestOrder()[1]]);
-    }
-    if (stage == 26) { //calib 3
+    if (stage == 35) { //calib 3
         runCalibration();
     }
-    if (stage == 27) { //MC test instructions
+    if (stage == 36) { //MC test instructions
         fill(1);
         textSize(fontSize * 2);
         text("McCollough test instructions", width * 0.5, height * 0.2);
     }
-    if (stage == 28) { //MC test 1
+    if (stage == 37) { //MC test 1.1
         drawMcTest(mcTestOrder()[0]);
     }
-    if (stage == 29) { //MC test 2
+    if (stage == 38) { //MC test 2.1
         drawMcTest(mcTestOrder()[1]);
     }
-    if (stage == 30) { //MC test 3
+    if (stage == 39) { //MC test 3.1
         drawMcTest(mcTestOrder()[2]);
     }
-    if (stage == 31) { //MC test 4
+    if (stage == 40) { //MC test 4.1
+        drawMcTest(mcTestOrder()[3]);
+    }
+    if (stage == 41) { //MC test 1.2
+        drawMcTest(mcTestOrder()[0]);
+    }
+    if (stage == 42) { //MC test 2.2
+        drawMcTest(mcTestOrder()[1]);
+    }
+    if (stage == 43) { //MC test 3.2
+        drawMcTest(mcTestOrder()[2]);
+    }
+    if (stage == 44) { //MC test 4.2
         drawMcTest(mcTestOrder()[3]);
     }
     if (stage == endStage) { //end
@@ -446,20 +594,22 @@ function startTrackingTable() {
 }
 
 function saveTracking() {
-    newRow = gazeTable.addRow();
-    newRow.setNum('frame', frameCount);
-    newRow.setNum('time', millis());
-    newRow.setNum('stage', stage);
-    newRow.setString('stageName', stageNames[stage]);
-    newRow.setNum('stageVal', measuredValues[stageToValue[stage]]);
-    newRow.setNum('discrjudgement', discrJudgement);
-    newRow.setNum('discrstatus', discrStatus);
-    newRow.setNum('pogrx', pog[0]);
-    newRow.setNum('pogry', pog[1]);
-    newRow.setNum('poglx', pog[2]);
-    newRow.setNum('pogly', pog[3]);
-    newRow.setNum('mousex', mouseX);
-    newRow.setNum('mousey', mouseY);
+    if (0 < stage) {
+        newRow = gazeTable.addRow();
+        newRow.setNum('frame', frameCount);
+        newRow.setNum('time', millis());
+        newRow.setNum('stage', stage);
+        newRow.setString('stageName', stageNames[stage]);
+        newRow.setNum('stageVal', measuredValues[stageToValue[stage]]);
+        newRow.setNum('discrjudgement', discrJudgement);
+        newRow.setNum('discrstatus', discrStatus);
+        newRow.setNum('pogrx', pog[0]);
+        newRow.setNum('pogry', pog[1]);
+        newRow.setNum('poglx', pog[2]);
+        newRow.setNum('pogly', pog[3]);
+        newRow.setNum('mousex', mouseX);
+        newRow.setNum('mousey', mouseY);
+    }
 }
 
 function exportTrackingTable() {
@@ -687,7 +837,7 @@ function goToPrevStage() {
     changeStage(-1);
 }
 
-function changeStage(change) {//DEV
+function changeStage(change) {
     var go = true;
 
     if (stage == 0 && participantInput.value() == '') {
@@ -701,10 +851,13 @@ function changeStage(change) {//DEV
             participantInput.show();
         }
         if (stage == 1) { //calib 1
+            participantID = participantInput.value();
+            setParticipantDependentStageSettings();
+            createSliders();
+
             prevButton.show();
             adaptStageDurationInput.hide();
             participantInput.hide();
-            participantID = participantInput.value();
             startCalibration(width * calibSize, height * calibSize);
         }
         if (stage == 2) { //gaze tracking test
@@ -712,10 +865,10 @@ function changeStage(change) {//DEV
             endCalibration();
             startDiscriminator();
         }
-        if (stage == 16) { //calib 2
+        if (stage == 25) { //calib 2
             startCalibration(width * calibSize, height * calibSize);
         }
-        if (stage == 17) { //adapt instructions
+        if (stage == 26) { //adapt instructions
             endCalibration();
         }
         if (stage == adaptStage) { //adapt
@@ -723,16 +876,16 @@ function changeStage(change) {//DEV
                 startAdaptStage();
             }
         }
-        if (stage == 19) { // HG instructions
+        if (stage == adaptStage + 1) { // HG instructions
             endAdaptStage();
             if (change < 0) {
                 nextButton.show();
             }
         }
-        if (stage == 26) { // calib 3
+        if (stage == 35) { // calib 3
             startCalibration(width * calibSize, height * calibSize);
         }
-        if (stage == 27) { // MC test instructions
+        if (stage == 36) { // MC test instructions
             endCalibration();
         }
         if (stage == endStage - 1) { //MC test 4
@@ -983,51 +1136,101 @@ function drawMcCollough(c, s, m, x, y, o) {
     noFill();
 }
 
-function mcBaselineOrder(){//DEV
-
+function mcBaselineOrder() {
+    return [
+        [0, 1, 2, 3],
+        [1, 0, 2, 3],
+        [0, 1, 3, 2],
+        [1, 0, 3, 2],
+        [2, 3, 0, 1],
+        [3, 2, 0, 1],
+        [2, 3, 1, 0],
+        [3, 2, 1, 0]
+    ][(participantID - 1) % 8];
 }
 
 function mcTestOrder() {
     return [
-        [1, 2, 3, 4],
-        [2, 1, 3, 4],
-        [1, 2, 4, 3],
-        [2, 1, 4, 3],
-        [3, 4, 1, 2],
-        [4, 3, 1, 2],
-        [3, 4, 2, 1],
-        [4, 3, 2, 1]
+        [0, 1, 2, 3],
+        [1, 0, 2, 3],
+        [0, 1, 3, 2],
+        [1, 0, 3, 2],
+        [2, 3, 0, 1],
+        [3, 2, 0, 1],
+        [2, 3, 1, 0],
+        [3, 2, 1, 0]
     ][(participantID - 1) % 8];
 }
 
-function drawMcBaseline(which) {//DEV
+function drawMcBaseline(which) {
+    if (which == 0) {//h, r, lu
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
+        drawMcBaselineMask([-1, -1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 1) {//h, r, rd
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
+        drawMcBaselineMask([1, 1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 2) {//v, g, lu
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
+        drawMcBaselineMask([-1, -1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 3) {//v, g, rd
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
+        drawMcBaselineMask([1, 1]);
+        drawFixCross(stimX, stimY);
+    }
+
 }
 
 function drawMcTest(which) {
-    if (which == 1) {//h, g, na
+    if (which == 0) {//h, g, na
         drawWhiteComparisonRects();
         drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
         drawMcTestMask([-1, 1]);
         drawFixCross(stimX, stimY);
     }
-    if (which == 2) {//h, g, a
+    if (which == 1) {//h, g, a
         drawWhiteComparisonRects();
         drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
         drawMcTestMask([1, -1]);
         drawFixCross(stimX, stimY);
     }
-    if (which == 3) {//v, r, na
+    if (which == 2) {//v, r, na
         drawWhiteComparisonRects();
         drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
         drawMcTestMask([-1, 1]);
         drawFixCross(stimX, stimY);
     }
-    if (which == 4) {//v, r, a
+    if (which == 3) {//v, r, a
         drawWhiteComparisonRects();
         drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
         drawMcTestMask([1, -1]);
         drawFixCross(stimX, stimY);
     }
+}
+
+function drawMcBaselineMask(placing) {
+    var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
+    var naDims = getNonadaptDims(placing);
+
+    fill(0);
+    rect(stimX, stimY - placing[0] * stimSize * 0.25, stimSize, stimSize * 0.5);
+    rect(stimX - placing[1] * stimSize * 0.25, stimY + placing[1] * stimSize * 0.25, stimSize * 0.5, stimSize * 0.5);
+    var translate = (naDims[3] + hgDims[0] + hgDims[1]) * 0.5;
+    rect(naDims[0] - translate, naDims[1], hgDims[0] + hgDims[1], 4.5 * (hgDims[0] + hgDims[1]));
+    rect(naDims[0], naDims[1] - translate, 4.5 * (hgDims[0] + hgDims[1]), hgDims[0] + hgDims[1]);
+    rect(naDims[0] + translate, naDims[1], hgDims[0] + hgDims[1], 4.5 * (hgDims[0] + hgDims[1]));
+    rect(naDims[0], naDims[1] + translate, 4.5 * (hgDims[0] + hgDims[1]), hgDims[0] + hgDims[1]);
+    noFill();
+    noStroke();
 }
 
 function drawMcTestMask(placing) {
@@ -1047,84 +1250,134 @@ function drawMcTestMask(placing) {
     noStroke();
 }
 
-function hgPreTestOrder() {
+function hgPreOrder() {
     return [
         [0, 1],
         [1, 0]
     ][(participantID - 1) % 2]
 }
 
-function hgPostTestOrder() {
+function hgPostOrder() {
     return [
         [0, 1],
         [1, 0]
     ][(participantID - 1) % 2]
 }
 
-function saveResults() {//DEV: új stagek + mentse a baseline és a test sorrendet
+function selectFromArray(array, order) {
+    var result = [];
+    for (var i = 0; i < order.length; i++) {
+        result.push(array[order[i]]);
+    }
+    return result;
+}
+
+function saveResults() {
     var resultsTable = new p5.Table();
 
+    //exp. setup
     resultsTable.addColumn('participantID');
     resultsTable.addColumn('expDuration');
     resultsTable.addColumn('adaptStageDuration');
-    resultsTable.addColumn('mcTestOrder');
     resultsTable.addColumn('hrPreTestOrder');
-    resultsTable.addColumn('hgPostTestOrder');
-    resultsTable.addColumn('HGnocolPreNa1');
-    resultsTable.addColumn('HGnocolPreA1');
-    resultsTable.addColumn('HGnocolPreNa2');
-    resultsTable.addColumn('HGnocolPreA2');
-    resultsTable.addColumn('HGabovecolPreNa');
-    resultsTable.addColumn('HGabovecolPreA');
-    resultsTable.addColumn('HGbelowcolPreNa1');
-    resultsTable.addColumn('HGbelowcolPreA1');
-    resultsTable.addColumn('HGbelowcolPreNa2');
-    resultsTable.addColumn('HGbelowcolPreA2');
-    resultsTable.addColumn('HGabovecolPostNa');
-    resultsTable.addColumn('HGabovecolPostA');
-    resultsTable.addColumn('HGbelowcolPostNa1');
-    resultsTable.addColumn('HGbelowcolPostA1');
-    resultsTable.addColumn('HGbelowcolPostNa2');
-    resultsTable.addColumn('HGbelowcolPostA2');
+    resultsTable.addColumn('hgPostOrder');
+    resultsTable.addColumn('mcBaselineOrder');
+    resultsTable.addColumn('mcTestOrder');
 
-    //DEV inkább ugyanolyan sorrendbe mentse és külön kódolja, hogy mi volt a sorrend
-    /*resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[0] - 1]); 
-    resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[1] - 1]);
-    resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[2] - 1]);
-    resultsTable.addColumn('MCtest' + ['hNa', 'hA', 'vNa', 'vA'][mcTestOrder()[3] - 1]);*/
+    //hg pre results
+    resultsTable.addColumn('HGnocolPre' + hgPreNullOrder[0] + '1');
+    resultsTable.addColumn('HGnocolPre' + hgPreNullOrder[1] + '1');
+    resultsTable.addColumn('HGnocolPre' + hgPreNullOrder[0] + '2');
+    resultsTable.addColumn('HGnocolPre' + hgPreNullOrder[1] + '2');
+    resultsTable.addColumn('HGbelowcolPre' + hgPreNullOrder[0] + '1');
+    resultsTable.addColumn('HGbelowcolPre' + hgPreNullOrder[1] + '1');
+    resultsTable.addColumn('HGbelowcolPre' + hgPreNullOrder[0] + '2');
+    resultsTable.addColumn('HGbelowcolPre' + hgPreNullOrder[1] + '2');
+    resultsTable.addColumn('HGabovecolPre' + hgPreNullOrder[0]);
+    resultsTable.addColumn('HGabovecolPre' + hgPreNullOrder[1]);
 
-    resultsTable.addColumn('MCtesthNA'); 
-    resultsTable.addColumn('MCtesthA');
-    resultsTable.addColumn('MCtestvNA');
-    resultsTable.addColumn('MCtestvA');
+    //mc baseline results
+    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[0] + '1');
+    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[1] + '1');
+    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[2] + '1');
+    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[3] + '1');
+    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[0] + '2');
+    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[1] + '2');
+    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[2] + '2');
+    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[3] + '2');
+
+    //hg post results
+    resultsTable.addColumn('HGbelowcolPost' + hgPostNullOrder[0] + '1');
+    resultsTable.addColumn('HGbelowcolPost' + hgPostNullOrder[1] + '1');
+    resultsTable.addColumn('HGbelowcolPost' + hgPostNullOrder[0] + '2');
+    resultsTable.addColumn('HGbelowcolPost' + hgPostNullOrder[1] + '2');
+    resultsTable.addColumn('HGabovecolPost' + hgPostNullOrder[0]);
+    resultsTable.addColumn('HGabovecolPost' + hgPostNullOrder[1]);
+
+    //mc test results
+    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[0] + '1');
+    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[1] + '1');
+    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[2] + '1');
+    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[3] + '1');
+    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[0] + '2');
+    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[1] + '2');
+    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[2] + '2');
+    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[3] + '2');
+
+    var hgPreStageNames = selectFromArray(hgPreNullOrder, hgPreOrder());
+    var hgPostStageNames = selectFromArray(hgPostNullOrder, hgPostOrder());
+    var mcBaselineStageNames = selectFromArray(mcBaselineNameNullOrder, mcBaselineOrder());
+    var mcTestStageNames = selectFromArray(mcTestNameNullOrder, mcTestOrder());
 
     let newRow = resultsTable.addRow();
+    //exp. setup
     newRow.setNum('participantID', participantID);
     newRow.setNum('expDuration', millis() / 1000 / 60);
     newRow.setNum('adaptStageDuration', adaptStageDuration);
-    newRow.setNum('mcTestOrder', mcTestOrder());
-    newRow.setNum('hrPreTestOrder', hgPreTestOrder());
-    newRow.setNum('hgPostTestOrder', hgPostTestOrder());
-    newRow.setNum('HGnocolPreNa1', measuredValues[1]);
-    newRow.setNum('HGnocolPreA1', measuredValues[2]);
-    newRow.setNum('HGnocolPreNa2', measuredValues[3]);
-    newRow.setNum('HGnocolPreA2', measuredValues[4]);
-    newRow.setNum('HGabovecolPreNa', measuredValues[5]);
-    newRow.setNum('HGabovecolPreA', measuredValues[6]);
-    newRow.setNum('HGbelowcolPreNa1', measuredValues[7]);
-    newRow.setNum('HGbelowcolPreA1', measuredValues[8]);
-    newRow.setNum('HGbelowcolPreNa2', measuredValues[9]);
-    newRow.setNum('HGbelowcolPreA2', measuredValues[10]);
-    newRow.setNum('HGabovecolPostNa', measuredValues[11]);
-    newRow.setNum('HGabovecolPostA', measuredValues[12]);
-    newRow.setNum('HGbelowcolPostNa1', measuredValues[13]);
-    newRow.setNum('HGbelowcolPostA1', measuredValues[14]);
-    newRow.setNum('HGbelowcolPostNa2', measuredValues[15]);
-    newRow.setNum('HGbelowcolPostA2', measuredValues[16]);
-    newRow.setNum('MCtest' + ['hNA', 'hA', 'vNA', 'vA'][mcTestOrder()[0] - 1], measuredValues[17]);
-    newRow.setNum('MCtest' + ['hNA', 'hA', 'vNA', 'vA'][mcTestOrder()[1] - 1], measuredValues[18]);
-    newRow.setNum('MCtest' + ['hNA', 'hA', 'vNA', 'vA'][mcTestOrder()[2] - 1], measuredValues[19]);
-    newRow.setNum('MCtest' + ['hNA', 'hA', 'vNA', 'vA'][mcTestOrder()[3] - 1], measuredValues[20]);
+    newRow.setString('hrPreTestOrder', hgPreStageNames.join('_'));
+    newRow.setString('hgPostOrder', hgPostStageNames.join('_'));
+    newRow.setString('mcBaselineOrder', mcBaselineStageNames.join('_'));
+    newRow.setString('mcTestOrder', mcTestStageNames.join('_'));
+
+    //hg pre results
+    newRow.setNum('HGnocolPre' + hgPreStageNames[0] + '1', measuredValues[1]);
+    newRow.setNum('HGnocolPre' + hgPreStageNames[1] + '1', measuredValues[2]);
+    newRow.setNum('HGnocolPre' + hgPreStageNames[0] + '2', measuredValues[3]);
+    newRow.setNum('HGnocolPre' + hgPreStageNames[1] + '2', measuredValues[4]);
+    newRow.setNum('HGbelowcolPre' + hgPreStageNames[0] + '1', measuredValues[5]);
+    newRow.setNum('HGbelowcolPre' + hgPreStageNames[1] + '1', measuredValues[6]);
+    newRow.setNum('HGbelowcolPre' + hgPreStageNames[0] + '2', measuredValues[7]);
+    newRow.setNum('HGbelowcolPre' + hgPreStageNames[1] + '2', measuredValues[8]);
+    newRow.setNum('HGabovecolPre' + hgPreStageNames[0], measuredValues[9]);
+    newRow.setNum('HGabovecolPre' + hgPreStageNames[1], measuredValues[10]);
+
+    //mc baseline results
+    newRow.setNum('MCbaseline' + mcBaselineStageNames[0] + '1', measuredValues[11]);
+    newRow.setNum('MCbaseline' + mcBaselineStageNames[1] + '1', measuredValues[12]);
+    newRow.setNum('MCbaseline' + mcBaselineStageNames[2] + '1', measuredValues[13]);
+    newRow.setNum('MCbaseline' + mcBaselineStageNames[3] + '1', measuredValues[14]);
+    newRow.setNum('MCbaseline' + mcBaselineStageNames[0] + '2', measuredValues[15]);
+    newRow.setNum('MCbaseline' + mcBaselineStageNames[1] + '2', measuredValues[16]);
+    newRow.setNum('MCbaseline' + mcBaselineStageNames[2] + '2', measuredValues[17]);
+    newRow.setNum('MCbaseline' + mcBaselineStageNames[3] + '2', measuredValues[18]);
+
+    //hg post results
+    newRow.setNum('HGbelowcolPost' + hgPostStageNames[0] + '1', measuredValues[19]);
+    newRow.setNum('HGbelowcolPost' + hgPostStageNames[1] + '1', measuredValues[20]);
+    newRow.setNum('HGbelowcolPost' + hgPostStageNames[0] + '2', measuredValues[21]);
+    newRow.setNum('HGbelowcolPost' + hgPostStageNames[1] + '2', measuredValues[22]);
+    newRow.setNum('HGabovecolPost' + hgPostStageNames[0], measuredValues[23]);
+    newRow.setNum('HGabovecolPost' + hgPostStageNames[1], measuredValues[24]);
+
+    //mc test results
+    newRow.setNum('MCtest' + mcTestStageNames[0] + '1', measuredValues[25]);
+    newRow.setNum('MCtest' + mcTestStageNames[1] + '1', measuredValues[26]);
+    newRow.setNum('MCtest' + mcTestStageNames[2] + '1', measuredValues[27]);
+    newRow.setNum('MCtest' + mcTestStageNames[3] + '1', measuredValues[28]);
+    newRow.setNum('MCtest' + mcTestStageNames[0] + '2', measuredValues[29]);
+    newRow.setNum('MCtest' + mcTestStageNames[1] + '2', measuredValues[30]);
+    newRow.setNum('MCtest' + mcTestStageNames[2] + '2', measuredValues[31]);
+    newRow.setNum('MCtest' + mcTestStageNames[3] + '2', measuredValues[32]);
 
     saveTable(resultsTable, 'results_' + participantID + '.csv');
     exportTrackingTable();
