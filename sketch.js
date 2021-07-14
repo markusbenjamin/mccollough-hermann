@@ -344,12 +344,12 @@ function draw() {
         text('HG warmup instructions', width * 0.5, height * 0.2);
     }
     if (stage == 4) { //HG warmup
-        drawMcCollough(color(1), stimSize * 1.35, 6, stimX, stimY, 1);
+        drawMcCollough(color(1), stimSize * 1, 6, stimX, stimY, 1);
         drawFixCross(stimX, stimY);
         fill(0.85);
-        rect(stimX - stimSize * 1.35 * 0.5 * 1.7, stimY, stimSize * 1.35 * 0.5 * 0.65, stimSize * 1.35 * 0.5 * 0.65);
+        rect(stimX - stimSize * 1 * 0.5 * 1.7, stimY, stimSize * 1 * 0.5 * 0.65, stimSize * 1 * 0.5 * 0.65);
         fill(measuredValues[stageToValue[stage]]);
-        rect(stimX + stimSize * 1.35 * 0.5 * 1.7, stimY, stimSize * 1.35 * 0.5 * 0.65, stimSize * 1.35 * 0.5 * 0.65);
+        rect(stimX + stimSize * 1 * 0.5 * 1.7, stimY, stimSize * 1 * 0.5 * 0.65, stimSize * 1 * 0.5 * 0.65);
         noFill();
     }
     if (stage == 5) { //HG instructions 1
