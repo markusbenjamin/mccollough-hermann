@@ -11,14 +11,18 @@ var adaptStageDuration, adaptDuration, adaptCounter, adaptMaskSwitchTime, adaptS
 var freeViewing;
 
 var prevButton, nextButton, finishButton;
+var arrowDir;
 
-var stageToValue, measuredValues, measuredValuesDefault, ranges, stageNames;
+var stageToValue, measuredValues, measuredValuesDefault, ranges, stageNames, stageMinNames, stageMaxNames;
 var sliders;
 var hgPreNullOrder, hgPostNullOrder;
 var mcBaselineNameNullOrder, mcBaselineStartValNullOrder;
 var mcTestNameNullOrder, mcTestStartValNullOrder;
+var mcBaselineOrder, mcTestOrder;
+var mcTestStartVals;
 
 var adaptStageDurationInput, participantInput;
+var devGUI;
 
 var saved;
 
@@ -26,8 +30,8 @@ var saved;
 let WASM_URL;
 
 async function loadGazeFilter() {
-    WASM_URL = "./gazefilter.wasm";
-    await gazefilter.init("gazefilter.wasm");
+    WASM_URL = './gazefilter.wasm';
+    await gazefilter.init('gazefilter.wasm');
     await gazefilter.tracker.connect();
 }
 
@@ -101,8 +105,11 @@ function setParameters() {
 
     stageToValue = [null, null, null, null, 0, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, null, 11, 12, 13, 14, 15, 16, 17, 18, null, null, null, null, 19, 20, 21, 22, 23, 24, null, null, 25, 26, 27, 28, 29, 30, 31, 32, null];
     ranges = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]];
+    stageMinNames = ['darker','darker','darker','darker','darker','darker','darker','darker','darker','darker','darker','green','green','green','green','green','green','green','green','darker','darker','darker','darker','darker','darker','green','green','green','green','green','green','green','green'];
+    stageMaxNames = ['lighter','lighter','lighter','lighter','lighter','lighter','lighter','lighter','lighter','lighter','lighter','red','red','red','red','red','red','red','red','lighter','lighter','lighter','lighter','lighter','lighter','red','red','red','red','red','red','red','red'];
 
     freeViewing = false;
+    devGUI = false;
 }
 
 function initialize() {
@@ -118,7 +125,12 @@ function initialize() {
     prevButton.hide();
     nextButton = createButton('Next stage');
     nextButton.mousePressed(goToNextStage);
-    nextButton.show();
+    if (devGUI) {
+        nextButton.show();
+    }
+    else {
+        nextButton.hide();
+    }
     finishButton = createButton('Finish');
     finishButton.mousePressed(saveResults);
     finishButton.hide();
@@ -153,17 +165,30 @@ function initialize() {
 
     hgPreNullOrder = ['NA', 'A'];
     hgPostNullOrder = ['NA', 'A'];
-    mcBaselineNameNullOrder = ['hLU', 'hRD', 'vLU', 'vRD'];
-    mcBaselineStartValNullOrder = [1, 1, -1, -1];
-    mcTestNameNullOrder = ['hNA', 'hA', 'vNA', 'vA'];
-    mcTestStartValNullOrder = [-1, -1, 1, 1];
+    mcBaselineNameNullOrder = ['hrLU', 'hrRD', 'vgLU', 'vgRD', 'hgLU', 'hgRD', 'vrLU', 'vrRD'];
+    mcBaselineStartValNullOrder = [1, 1, -1, -1, -1, -1, 1, 1];
+    mcBaselineOrder = generateMcOrder();
+    mcTestNameNullOrder = ['hgNA', 'hgA', 'vrNA', 'vrA', 'hrNA', 'hrA', 'vgNA', 'vgA'];
+    mcTestStartValNullOrder = [
+        random(-1, -0.5),
+        random(-1, -0.5),
+        random(0.5, 1),
+        random(0.5, 1),
+        random(0.5, 1),
+        random(0.5, 1),
+        random(-1, -0.5),
+        random(-1, -0.5)
+    ];
+    mcTestOrder = generateMcOrder();
+
+    arrowDir = 0;
 }
 
 function setParticipantDependentStageSettings() {
     var hgPreStageNames = selectFromArray(hgPreNullOrder, hgPreOrder());
     var hgPostStageNames = selectFromArray(hgPostNullOrder, hgPostOrder());
-    var mcBaselineStageNames = selectFromArray(mcBaselineNameNullOrder, mcBaselineOrder());
-    var mcTestStageNames = selectFromArray(mcTestNameNullOrder, mcTestOrder());
+    var mcBaselineStageNames = selectFromArray(mcBaselineNameNullOrder, mcBaselineOrder);
+    var mcTestStageNames = selectFromArray(mcTestNameNullOrder, mcTestOrder);
 
     stageNames = [
         'start', // 0
@@ -187,10 +212,10 @@ function setParticipantDependentStageSettings() {
         'MC baseline ' + mcBaselineStageNames[1], // 14
         'MC baseline ' + mcBaselineStageNames[2], // 15
         'MC baseline ' + mcBaselineStageNames[3], // 16
-        'MC baseline ' + mcBaselineStageNames[0], // 17
-        'MC baseline ' + mcBaselineStageNames[1], // 18
-        'MC baseline ' + mcBaselineStageNames[2], // 19
-        'MC baseline ' + mcBaselineStageNames[3], // 20
+        'MC baseline ' + mcBaselineStageNames[4], // 17
+        'MC baseline ' + mcBaselineStageNames[5], // 18
+        'MC baseline ' + mcBaselineStageNames[6], // 19
+        'MC baseline ' + mcBaselineStageNames[7], // 20
         'calib 2', // 21
         'adapt instructions', // 22
         'adapt', // 23
@@ -207,15 +232,15 @@ function setParticipantDependentStageSettings() {
         'MC test ' + mcTestStageNames[1], // 33
         'MC test ' + mcTestStageNames[2], // 34
         'MC test ' + mcTestStageNames[3], // 35
-        'MC test ' + mcTestStageNames[0], // 36
-        'MC test ' + mcTestStageNames[1], // 37
-        'MC test ' + mcTestStageNames[2], // 38
-        'MC test ' + mcTestStageNames[3], // 39
+        'MC test ' + mcTestStageNames[4], // 36
+        'MC test ' + mcTestStageNames[5], // 37
+        'MC test ' + mcTestStageNames[6], // 38
+        'MC test ' + mcTestStageNames[7], // 39
         'end'  // 40
     ];
 
-    var mcBaselineStartVals = selectFromArray(mcBaselineStartValNullOrder, mcBaselineOrder());
-    var mcTestStartVals = selectFromArray(mcTestStartValNullOrder, mcTestOrder());
+    var mcBaselineStartVals = selectFromArray(mcBaselineStartValNullOrder, mcBaselineOrder);
+    mcTestStartVals = selectFromArray(mcTestStartValNullOrder, mcTestOrder);
 
     measuredValues = [
         0.5, // 0 4
@@ -233,10 +258,10 @@ function setParticipantDependentStageSettings() {
         mcBaselineStartVals[1], // 12 14
         mcBaselineStartVals[2], // 13 15
         mcBaselineStartVals[3], // 14 16
-        mcBaselineStartVals[0], // 15 17
-        mcBaselineStartVals[1], // 16 18
-        mcBaselineStartVals[2], // 17 19
-        mcBaselineStartVals[3], // 18 20
+        mcBaselineStartVals[4], // 15 17
+        mcBaselineStartVals[5], // 16 18
+        mcBaselineStartVals[6], // 17 19
+        mcBaselineStartVals[7], // 18 20
         0.5, // 19 25
         0.5, // 20 26
         0.5, // 21 25
@@ -247,10 +272,10 @@ function setParticipantDependentStageSettings() {
         mcTestStartVals[1], // 26 33
         mcTestStartVals[2], // 27 34
         mcTestStartVals[3], // 28 35
-        mcTestStartVals[0], // 29 36
-        mcTestStartVals[1], // 30 37
-        mcTestStartVals[2], // 31 38
-        mcTestStartVals[3]  // 32 39
+        mcTestStartVals[4], // 29 36
+        mcTestStartVals[5], // 30 37
+        mcTestStartVals[6], // 31 38
+        mcTestStartVals[7]  // 32 39
     ];
 }
 
@@ -261,14 +286,16 @@ function createSliders() {
         sliders[i].hide();
     }
     if (stageToValue[stage] != null) {
-        sliders[stageToValue[stage]].show();
+        if (devGUI) {
+            sliders[stageToValue[stage]].show();
+        }
     }
 }
 
 function calculateSizes() {
     stimX = width * 0.5;
     stimY = height * 0.5;
-    stimSize = max(width, height) * 0.2;
+    stimSize = max(width, height) * 0.3;
 
     fontSize = width * 0.015;
     var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
@@ -291,14 +318,14 @@ function draw() {
     if (stage == 0) { //exp start
         fill(1);
         textSize(fontSize * 2);
-        text("experiment settings", width * 0.5, height * 0.2);
+        text('experiment settings', width * 0.5, height * 0.2);
         textAlign(LEFT);
         textSize(fontSize * 1.5);
-        text("adaptation time:", width * 0.3, height * 0.3);
+        text('adaptation time:', width * 0.3, height * 0.3);
         adaptStageDurationInput.position(width * 0.5 - width * 0.1, height * 0.325);
         styleElement(adaptStageDurationInput, width * 0.2, height * 0.05, fontSize * 1.5);
 
-        text("participant ID:", width * 0.3, height * 0.6);
+        text('participant ID:', width * 0.3, height * 0.6);
         participantInput.position(width * 0.5 - width * 0.1, height * 0.625);
         styleElement(participantInput, width * 0.2, height * 0.05, fontSize * 1.5);
         textAlign(CENTER);
@@ -314,7 +341,7 @@ function draw() {
     if (stage == 3) { //HG warmup instructions
         fill(1);
         textSize(fontSize * 2);
-        text("HG warmup instructions", width * 0.5, height * 0.2);
+        text('HG warmup instructions', width * 0.5, height * 0.2);
     }
     if (stage == 4) { //HG warmup
         drawMcCollough(color(1), stimSize * 1.35, 6, stimX, stimY, 1);
@@ -328,7 +355,7 @@ function draw() {
     if (stage == 5) { //HG instructions 1
         fill(1);
         textSize(fontSize * 2);
-        text("HG instructions", width * 0.5, height * 0.2);
+        text('HG instructions', width * 0.5, height * 0.2);
     }
     if (stage == 6) { //HG nocol a/na pre 1
         drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
@@ -383,31 +410,31 @@ function draw() {
     if (stage == 16) { //MC baseline instructions
         fill(1);
         textSize(fontSize * 2);
-        text("MC baseline instructions", width * 0.5, height * 0.2);
+        text('MC baseline instructions', width * 0.5, height * 0.2);
     }
-    if (stage == 17) { //MC baseline 1.1
-        drawMcBaseline(mcBaselineOrder()[0]);
+    if (stage == 17) { //MC baseline 1
+        drawMcBaseline(mcBaselineOrder[0]);
     }
-    if (stage == 18) { //MC baseline 2.1
-        drawMcBaseline(mcBaselineOrder()[1]);
+    if (stage == 18) { //MC baseline 2
+        drawMcBaseline(mcBaselineOrder[1]);
     }
-    if (stage == 19) { //MC baseline 3.1
-        drawMcBaseline(mcBaselineOrder()[2]);
+    if (stage == 19) { //MC baseline 3
+        drawMcBaseline(mcBaselineOrder[2]);
     }
-    if (stage == 20) { //MC baseline 4.1
-        drawMcBaseline(mcBaselineOrder()[3]);
+    if (stage == 20) { //MC baseline 4
+        drawMcBaseline(mcBaselineOrder[3]);
     }
-    if (stage == 21) { //MC baseline 1.2
-        drawMcBaseline(mcBaselineOrder()[0]);
+    if (stage == 21) { //MC baseline 5
+        drawMcBaseline(mcBaselineOrder[4]);
     }
-    if (stage == 22) { //MC baseline 2.2
-        drawMcBaseline(mcBaselineOrder()[1]);
+    if (stage == 22) { //MC baseline 6
+        drawMcBaseline(mcBaselineOrder[5]);
     }
-    if (stage == 23) { //MC baseline 3.2
-        drawMcBaseline(mcBaselineOrder()[2]);
+    if (stage == 23) { //MC baseline 7
+        drawMcBaseline(mcBaselineOrder[6]);
     }
-    if (stage == 24) { //MC baseline 4.2
-        drawMcBaseline(mcBaselineOrder()[3]);
+    if (stage == 24) { //MC baseline 8
+        drawMcBaseline(mcBaselineOrder[7]);
     }
     if (stage == 25) { //calib 2
         runCalibration();
@@ -415,13 +442,13 @@ function draw() {
     if (stage == 26) { //adapt instructions
         fill(1);
         textSize(fontSize * 2);
-        text("McCollough adaptation instructions", width * 0.5, height * 0.2);
+        text('McCollough adaptation instructions', width * 0.5, height * 0.2);
     }
     if (stage == adaptStage) { //adapt
         if (adaptFinished) {
             fill(1);
             textSize(fontSize * 2);
-            text("adaptation phase finished", stimX, stimY);
+            text('adaptation phase finished', stimX, stimY);
             noFill();
         }
         else {
@@ -481,7 +508,7 @@ function draw() {
     if (stage == 28) { //HG instructions 2
         fill(1);
         textSize(fontSize * 2);
-        text("HG instructions", width * 0.5, height * 0.2);
+        text('HG instructions', width * 0.5, height * 0.2);
     }
     if (stage == 29) { //HG below a/na post 1
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
@@ -519,43 +546,43 @@ function draw() {
     if (stage == 36) { //MC test instructions
         fill(1);
         textSize(fontSize * 2);
-        text("McCollough test instructions", width * 0.5, height * 0.2);
+        text('McCollough test instructions', width * 0.5, height * 0.2);
     }
-    if (stage == 37) { //MC test 1.1
-        drawMcTest(mcTestOrder()[0]);
+    if (stage == 37) { //MC test 1
+        drawMcTest(mcTestOrder[0]);
     }
-    if (stage == 38) { //MC test 2.1
-        drawMcTest(mcTestOrder()[1]);
+    if (stage == 38) { //MC test 2
+        drawMcTest(mcTestOrder[1]);
     }
-    if (stage == 39) { //MC test 3.1
-        drawMcTest(mcTestOrder()[2]);
+    if (stage == 39) { //MC test 3
+        drawMcTest(mcTestOrder[2]);
     }
-    if (stage == 40) { //MC test 4.1
-        drawMcTest(mcTestOrder()[3]);
+    if (stage == 40) { //MC test 4
+        drawMcTest(mcTestOrder[3]);
     }
-    if (stage == 41) { //MC test 1.2
-        drawMcTest(mcTestOrder()[0]);
+    if (stage == 41) { //MC test 5
+        drawMcTest(mcTestOrder[4]);
     }
-    if (stage == 42) { //MC test 2.2
-        drawMcTest(mcTestOrder()[1]);
+    if (stage == 42) { //MC test 6
+        drawMcTest(mcTestOrder[5]);
     }
-    if (stage == 43) { //MC test 3.2
-        drawMcTest(mcTestOrder()[2]);
+    if (stage == 43) { //MC test 7
+        drawMcTest(mcTestOrder[6]);
     }
-    if (stage == 44) { //MC test 4.2
-        drawMcTest(mcTestOrder()[3]);
+    if (stage == 44) { //MC test 8
+        drawMcTest(mcTestOrder[7]);
     }
     if (stage == endStage) { //end
         var savedString
         if (saved) {
-            savedString = "saved";
+            savedString = 'saved';
         }
         else {
-            savedString = "not yet saved";
+            savedString = 'not yet saved';
         }
         fill(1);
         textSize(fontSize * 2);
-        text("experiment finished\n\nresults " + savedString, width * 0.5, height * 0.4);
+        text('experiment finished\n\nresults ' + savedString, width * 0.5, height * 0.4);
         noFill();
     }
 
@@ -566,14 +593,21 @@ function draw() {
     finishButton.position(width * 0.97 - width * 0.1, height * 0.88);
     styleElement(finishButton, width * 0.1, height * 0.08, fontSize);
 
+    if(devGUI == false && saved == false){
+        fill(1);
+        textSize(fontSize*1.5);
+        text('press SPACE to continue', width * 0.5, height * 0.9);
+        noFill();
+    }
+
     saveTracking();
 
-    if (freeViewing) {
-        console.log("free viewing")
+    /*if (freeViewing) {
+        console.log('free viewing')
     }
     else {
-        console.log("fix cross");
-    }
+        console.log('fix cross');
+    }*/
 }
 
 function startTrackingTable() {
@@ -713,7 +747,7 @@ function getSmoothPog(n) {
 }
 
 function startCalibration(w, h) {
-    window.addEventListener("click", onmouseclick);
+    window.addEventListener('click', onmouseclick);
     calibration = true;
     calibDots = [];
     for (var i = -1; i < 2; i++) {
@@ -729,7 +763,7 @@ function runCalibration() {
             if (i == 4 && 5 < total(calibDots)[2]) {
                 fill(1);
                 textSize(fontSize * 1.5);
-                text("click each yellow dot five times", calibDots[i][0], calibDots[i][1]);
+                text('click each yellow dot five times', calibDots[i][0], calibDots[i][1]);
             }
             else {
                 fill(0.15, 1, calibDots[i][2] / 5);
@@ -744,7 +778,7 @@ function runCalibration() {
 }
 
 function endCalibration() {
-    window.removeEventListener("click", onmouseclick);
+    window.removeEventListener('click', onmouseclick);
     calibration = false;
 }
 
@@ -776,7 +810,7 @@ function showTrackingPredictions() {
         noStroke();
     }
 
-    if (fixStatus === "fixation") {
+    if (fixStatus === 'fixation') {
         stroke(1);
         line(fixPoint[0] - 40, fixPoint[1], fixPoint[0] + 40, fixPoint[1]);
         line(fixPoint[0], fixPoint[1] - 40, fixPoint[0], fixPoint[1] + 40);
@@ -789,10 +823,10 @@ function showTrackingStatus() {
     textSize(20);
     fill(1);
     text(
-        "FACE: " + faceStatus +
-        "\nCALIBRATION: " + calibEyeString + ", error: " + calibError + " px" +
-        "\nTRACKING: " + trackingStatus +
-        "\nFIXATION: " + fixStatus + ", duration: " + fixDur / 1000 + " s"
+        'FACE: ' + faceStatus +
+        '\nCALIBRATION: ' + calibEyeString + ', error: ' + calibError + ' px' +
+        '\nTRACKING: ' + trackingStatus +
+        '\nFIXATION: ' + fixStatus + ', duration: ' + fixDur / 1000 + ' s'
         , width * 0.015, height * 0.05);
     noFill();
     textAlign(CENTER);
@@ -808,8 +842,8 @@ function calculateRedGreenVal(val) {
 }
 
 function styleElement(element, w, h, fS) {
-    element.style("width", w + "px");
-    element.style("height", h + "px");
+    element.style('width', w + 'px');
+    element.style('height', h + 'px');
     element.style('font-family', 'Arial');
     element.style('font-size', fS + 'px');
 }
@@ -855,7 +889,9 @@ function changeStage(change) {
             setParticipantDependentStageSettings();
             createSliders();
 
-            prevButton.show();
+            if (devGUI) {
+                prevButton.show();
+            }
             adaptStageDurationInput.hide();
             participantInput.hide();
             startCalibration(width * calibSize, height * calibSize);
@@ -879,7 +915,9 @@ function changeStage(change) {
         if (stage == adaptStage + 1) { // HG instructions
             endAdaptStage();
             if (change < 0) {
-                nextButton.show();
+                if (devGUI) {
+                    nextButton.show();
+                }
             }
         }
         if (stage == 35) { // calib 3
@@ -890,7 +928,9 @@ function changeStage(change) {
         }
         if (stage == endStage - 1) { //MC test 4
             nextButton.hide();
-            finishButton.show();
+            if (devGUI) {
+                finishButton.show();
+            }
         }
         if (stage == endStage) { //end
             if (saved == false) {
@@ -906,7 +946,9 @@ function changeStage(change) {
 function handleSliderVisibility() {
     for (var i = 0; i <= measuredValues.length; i++) {
         if (i == stageToValue[stage] && sliders[i] != undefined) {
-            sliders[i].show();
+            if (devGUI) {
+                sliders[i].show();
+            }
         }
         else if (sliders[i] != undefined) {
             sliders[i].hide();
@@ -923,21 +965,66 @@ function readSliderValue() {
 function changeSliderValue(change) {
     if (stageToValue[stage] != null) {
         sliders[stageToValue[stage]].value(measuredValues[stageToValue[stage]] + change);
+        arrowDir = change / abs(change);
     }
 }
 
 function drawSlider() {
     if (stageToValue[stage] != null) {
-        sliders[stageToValue[stage]].show();
-        sliders[stageToValue[stage]].position(width * 0.5 - width * 0.4 * 0.5, height * 0.1);
-        sliders[stageToValue[stage]].style("width", width * 0.4 + "px");
-        fill(1);
-        textSize(fontSize);
-        text("< A ", width * 0.35, height * 0.045);
-        text(" D >", width * 0.65, height * 0.045);
-        text("<< J", width * 0.35, height * 0.085);
-        text("L >>", width * 0.65, height * 0.085);
-        noFill();
+        if (devGUI) {
+            sliders[stageToValue[stage]].show();
+            sliders[stageToValue[stage]].position(width * 0.5 - width * 0.4 * 0.5, height * 0.1);
+            sliders[stageToValue[stage]].style('width', width * 0.4 + 'px');
+            fill(1);
+            textSize(fontSize);
+            text('< A ', width * 0.35, height * 0.045);
+            text(' D >', width * 0.65, height * 0.045);
+            text('<< J', width * 0.35, height * 0.085);
+            text('L >>', width * 0.65, height * 0.085);
+            noFill();
+        }
+        else {
+            if (arrowDir != 0) {
+                stroke(1);
+                strokeWeight(5);
+                line(
+                    width * 0.45, height * (0.045 + 0.085) * 0.5,
+                    width * 0.55, height * (0.045 + 0.085) * 0.5
+                );
+                if (arrowDir == -1) {
+                    line(
+                        width * 0.45, height * (0.045 + 0.085) * 0.5,
+                        width * 0.45 + width * 0.0125 * cos(TAU * 0.125), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(TAU * 0.125)
+                    );
+                    line(
+                        width * 0.45, height * (0.045 + 0.085) * 0.5,
+                        width * 0.45 + width * 0.0125 * cos(-TAU * 0.125), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(-TAU * 0.125)
+                    );
+                }
+                if (arrowDir == 1) {
+                    line(
+                        width * 0.55, height * (0.045 + 0.085) * 0.5,
+                        width * 0.55 + width * 0.0125 * cos(-TAU * 0.625), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(-TAU * 0.625)
+                    );
+                    line(
+                        width * 0.55, height * (0.045 + 0.085) * 0.5,
+                        width * 0.55 + width * 0.0125 * cos(TAU * 0.625), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(TAU * 0.625)
+                    );
+                }
+            }
+            noStroke();
+            strokeWeight(1);
+            fill(1);
+            textSize(fontSize);
+            text(stageMinNames[stageToValue[stage]], width * 0.35, height * (0.045 + 0.085) * 0.5);
+            text(stageMaxNames[stageToValue[stage]], width * 0.65, height * (0.045 + 0.085) * 0.5);
+            text('< A ', width * 0.4, height * 0.045);
+            text(' D >', width * 0.6, height * 0.045);
+            text('<< J', width * 0.4, height * 0.085);
+            text('L >>', width * 0.6, height * 0.085);
+            noFill();
+        }
+
     }
 }
 
@@ -987,10 +1074,10 @@ function drawWhiteComparisonRects() {
 }
 
 function keyPressed() {
-    if (key === 'n' || key === 'N') {
+    if (keyCode === 32 || keyCode === 32) {
         goToNextStage();
     }
-    if (key === 'p' || key === 'P') {
+    if (keyCode === 8 || keyCode === 8) {
         goToPrevStage();
     }
 
@@ -1136,32 +1223,6 @@ function drawMcCollough(c, s, m, x, y, o) {
     noFill();
 }
 
-function mcBaselineOrder() {
-    return [
-        [0, 1, 2, 3],
-        [1, 0, 2, 3],
-        [0, 1, 3, 2],
-        [1, 0, 3, 2],
-        [2, 3, 0, 1],
-        [3, 2, 0, 1],
-        [2, 3, 1, 0],
-        [3, 2, 1, 0]
-    ][(participantID - 1) % 8];
-}
-
-function mcTestOrder() {
-    return [
-        [0, 1, 2, 3],
-        [1, 0, 2, 3],
-        [0, 1, 3, 2],
-        [1, 0, 3, 2],
-        [2, 3, 0, 1],
-        [3, 2, 0, 1],
-        [2, 3, 1, 0],
-        [3, 2, 1, 0]
-    ][(participantID - 1) % 8];
-}
-
 function drawMcBaseline(which) {
     if (which == 0) {//h, r, lu
         drawWhiteComparisonRects();
@@ -1187,7 +1248,30 @@ function drawMcBaseline(which) {
         drawMcBaselineMask([1, 1]);
         drawFixCross(stimX, stimY);
     }
-
+    if (which == 4) {//h, g, lu
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
+        drawMcBaselineMask([-1, -1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 5) {//h, g, rd
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
+        drawMcBaselineMask([1, 1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 6) {//v, r, lu
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
+        drawMcBaselineMask([-1, -1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 7) {//v, r, rd
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
+        drawMcBaselineMask([1, 1]);
+        drawFixCross(stimX, stimY);
+    }
 }
 
 function drawMcTest(which) {
@@ -1210,6 +1294,30 @@ function drawMcTest(which) {
         drawFixCross(stimX, stimY);
     }
     if (which == 3) {//v, r, a
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
+        drawMcTestMask([1, -1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 4) {//h, r', na
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
+        drawMcTestMask([-1, 1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 5) {//h, r', a
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, false);
+        drawMcTestMask([1, -1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 6) {//v, g', na
+        drawWhiteComparisonRects();
+        drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
+        drawMcTestMask([-1, 1]);
+        drawFixCross(stimX, stimY);
+    }
+    if (which == 7) {//v, g', a
         drawWhiteComparisonRects();
         drawMcCollough(calculateRedGreenVal(measuredValues[stageToValue[stage]]), stimSize, mcN, stimX, stimY, true);
         drawMcTestMask([1, -1]);
@@ -1273,7 +1381,42 @@ function selectFromArray(array, order) {
     return result;
 }
 
-function saveResults() {
+function generateMcOrder() {
+    var set = [];
+    for (var i = 0; i < 7; i++) {
+        set.push(round(random(1)));
+    }
+    var base = [[[0, 1], [2, 3]], [[4, 5], [6, 7]]];
+    var counter = 0;
+
+    if (set[counter] == 1) {
+        base.reverse();
+
+    }
+    counter++;
+    for (var i = 0; i < 2; i++) {
+        if (set[counter] == 1) {
+            base[i].reverse();
+        }
+        counter++;
+    }
+    for (var i = 0; i < 2; i++) {
+        for (var j = 0; j < 2; j++) {
+            if (set[counter] == 1) {
+                base[i][j].reverse();
+            }
+            counter++;
+        }
+    }
+
+    return flattenDeep(base);
+}
+
+function flattenDeep(arr1) {
+    return arr1.reduce((acc, val) => Array.isArray(val) ? acc.concat(flattenDeep(val)) : acc.concat(val), []);
+}
+
+function saveResults() { //DEV
     var resultsTable = new p5.Table();
 
     //exp. setup
@@ -1284,51 +1427,52 @@ function saveResults() {
     resultsTable.addColumn('hgPostOrder');
     resultsTable.addColumn('mcBaselineOrder');
     resultsTable.addColumn('mcTestOrder');
+    resultsTable.addColumn('mcTestStartVals');
 
     //hg pre results
-    resultsTable.addColumn('HGnocolPre' + hgPreNullOrder[0] + '1');
-    resultsTable.addColumn('HGnocolPre' + hgPreNullOrder[1] + '1');
-    resultsTable.addColumn('HGnocolPre' + hgPreNullOrder[0] + '2');
-    resultsTable.addColumn('HGnocolPre' + hgPreNullOrder[1] + '2');
-    resultsTable.addColumn('HGbelowcolPre' + hgPreNullOrder[0] + '1');
-    resultsTable.addColumn('HGbelowcolPre' + hgPreNullOrder[1] + '1');
-    resultsTable.addColumn('HGbelowcolPre' + hgPreNullOrder[0] + '2');
-    resultsTable.addColumn('HGbelowcolPre' + hgPreNullOrder[1] + '2');
-    resultsTable.addColumn('HGabovecolPre' + hgPreNullOrder[0]);
-    resultsTable.addColumn('HGabovecolPre' + hgPreNullOrder[1]);
+    resultsTable.addColumn('HGnocolPre_' + hgPreNullOrder[0] + '_1');
+    resultsTable.addColumn('HGnocolPre_' + hgPreNullOrder[1] + '_1');
+    resultsTable.addColumn('HGnocolPre_' + hgPreNullOrder[0] + '_2');
+    resultsTable.addColumn('HGnocolPre_' + hgPreNullOrder[1] + '_2');
+    resultsTable.addColumn('HGbelowcolPre_' + hgPreNullOrder[0] + '_1');
+    resultsTable.addColumn('HGbelowcolPre_' + hgPreNullOrder[1] + '_1');
+    resultsTable.addColumn('HGbelowcolPre_' + hgPreNullOrder[0] + '_2');
+    resultsTable.addColumn('HGbelowcolPre_' + hgPreNullOrder[1] + '_2');
+    resultsTable.addColumn('HGabovecolPre_' + hgPreNullOrder[0]);
+    resultsTable.addColumn('HGabovecolPre_' + hgPreNullOrder[1]);
 
     //mc baseline results
-    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[0] + '1');
-    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[1] + '1');
-    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[2] + '1');
-    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[3] + '1');
-    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[0] + '2');
-    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[1] + '2');
-    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[2] + '2');
-    resultsTable.addColumn('MCbaseline' + mcBaselineNameNullOrder[3] + '2');
+    resultsTable.addColumn('MCbaseline_' + mcBaselineNameNullOrder[0]);
+    resultsTable.addColumn('MCbaseline_' + mcBaselineNameNullOrder[1]);
+    resultsTable.addColumn('MCbaseline_' + mcBaselineNameNullOrder[2]);
+    resultsTable.addColumn('MCbaseline_' + mcBaselineNameNullOrder[3]);
+    resultsTable.addColumn('MCbaseline_' + mcBaselineNameNullOrder[4]);
+    resultsTable.addColumn('MCbaseline_' + mcBaselineNameNullOrder[5]);
+    resultsTable.addColumn('MCbaseline_' + mcBaselineNameNullOrder[6]);
+    resultsTable.addColumn('MCbaseline_' + mcBaselineNameNullOrder[7]);
 
     //hg post results
-    resultsTable.addColumn('HGbelowcolPost' + hgPostNullOrder[0] + '1');
-    resultsTable.addColumn('HGbelowcolPost' + hgPostNullOrder[1] + '1');
-    resultsTable.addColumn('HGbelowcolPost' + hgPostNullOrder[0] + '2');
-    resultsTable.addColumn('HGbelowcolPost' + hgPostNullOrder[1] + '2');
-    resultsTable.addColumn('HGabovecolPost' + hgPostNullOrder[0]);
-    resultsTable.addColumn('HGabovecolPost' + hgPostNullOrder[1]);
+    resultsTable.addColumn('HGbelowcolPost_' + hgPostNullOrder[0] + '_1');
+    resultsTable.addColumn('HGbelowcolPost_' + hgPostNullOrder[1] + '_1');
+    resultsTable.addColumn('HGbelowcolPost_' + hgPostNullOrder[0] + '_2');
+    resultsTable.addColumn('HGbelowcolPost_' + hgPostNullOrder[1] + '_2');
+    resultsTable.addColumn('HGabovecolPost_' + hgPostNullOrder[0]);
+    resultsTable.addColumn('HGabovecolPost_' + hgPostNullOrder[1]);
 
     //mc test results
-    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[0] + '1');
-    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[1] + '1');
-    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[2] + '1');
-    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[3] + '1');
-    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[0] + '2');
-    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[1] + '2');
-    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[2] + '2');
-    resultsTable.addColumn('MCtest' + mcTestNameNullOrder[3] + '2');
+    resultsTable.addColumn('MCtest_' + mcTestNameNullOrder[0]);
+    resultsTable.addColumn('MCtest_' + mcTestNameNullOrder[1]);
+    resultsTable.addColumn('MCtest_' + mcTestNameNullOrder[2]);
+    resultsTable.addColumn('MCtest_' + mcTestNameNullOrder[3]);
+    resultsTable.addColumn('MCtest_' + mcTestNameNullOrder[4]);
+    resultsTable.addColumn('MCtest_' + mcTestNameNullOrder[5]);
+    resultsTable.addColumn('MCtest_' + mcTestNameNullOrder[6]);
+    resultsTable.addColumn('MCtest_' + mcTestNameNullOrder[7]);
 
     var hgPreStageNames = selectFromArray(hgPreNullOrder, hgPreOrder());
     var hgPostStageNames = selectFromArray(hgPostNullOrder, hgPostOrder());
-    var mcBaselineStageNames = selectFromArray(mcBaselineNameNullOrder, mcBaselineOrder());
-    var mcTestStageNames = selectFromArray(mcTestNameNullOrder, mcTestOrder());
+    var mcBaselineStageNames = selectFromArray(mcBaselineNameNullOrder, mcBaselineOrder);
+    var mcTestStageNames = selectFromArray(mcTestNameNullOrder, mcTestOrder);
 
     let newRow = resultsTable.addRow();
     //exp. setup
@@ -1339,46 +1483,47 @@ function saveResults() {
     newRow.setString('hgPostOrder', hgPostStageNames.join('_'));
     newRow.setString('mcBaselineOrder', mcBaselineStageNames.join('_'));
     newRow.setString('mcTestOrder', mcTestStageNames.join('_'));
+    newRow.setString('mcTestStartVals', mcTestStartVals.join('_'));
 
     //hg pre results
-    newRow.setNum('HGnocolPre' + hgPreStageNames[0] + '1', measuredValues[1]);
-    newRow.setNum('HGnocolPre' + hgPreStageNames[1] + '1', measuredValues[2]);
-    newRow.setNum('HGnocolPre' + hgPreStageNames[0] + '2', measuredValues[3]);
-    newRow.setNum('HGnocolPre' + hgPreStageNames[1] + '2', measuredValues[4]);
-    newRow.setNum('HGbelowcolPre' + hgPreStageNames[0] + '1', measuredValues[5]);
-    newRow.setNum('HGbelowcolPre' + hgPreStageNames[1] + '1', measuredValues[6]);
-    newRow.setNum('HGbelowcolPre' + hgPreStageNames[0] + '2', measuredValues[7]);
-    newRow.setNum('HGbelowcolPre' + hgPreStageNames[1] + '2', measuredValues[8]);
-    newRow.setNum('HGabovecolPre' + hgPreStageNames[0], measuredValues[9]);
-    newRow.setNum('HGabovecolPre' + hgPreStageNames[1], measuredValues[10]);
+    newRow.setNum('HGnocolPre_' + hgPreStageNames[0] + '_1', measuredValues[1]);
+    newRow.setNum('HGnocolPre_' + hgPreStageNames[1] + '_1', measuredValues[2]);
+    newRow.setNum('HGnocolPre_' + hgPreStageNames[0] + '_2', measuredValues[3]);
+    newRow.setNum('HGnocolPre_' + hgPreStageNames[1] + '_2', measuredValues[4]);
+    newRow.setNum('HGbelowcolPre_' + hgPreStageNames[0] + '_1', measuredValues[5]);
+    newRow.setNum('HGbelowcolPre_' + hgPreStageNames[1] + '_1', measuredValues[6]);
+    newRow.setNum('HGbelowcolPre_' + hgPreStageNames[0] + '_2', measuredValues[7]);
+    newRow.setNum('HGbelowcolPre_' + hgPreStageNames[1] + '_2', measuredValues[8]);
+    newRow.setNum('HGabovecolPre_' + hgPreStageNames[0], measuredValues[9]);
+    newRow.setNum('HGabovecolPre_' + hgPreStageNames[1], measuredValues[10]);
 
     //mc baseline results
-    newRow.setNum('MCbaseline' + mcBaselineStageNames[0] + '1', measuredValues[11]);
-    newRow.setNum('MCbaseline' + mcBaselineStageNames[1] + '1', measuredValues[12]);
-    newRow.setNum('MCbaseline' + mcBaselineStageNames[2] + '1', measuredValues[13]);
-    newRow.setNum('MCbaseline' + mcBaselineStageNames[3] + '1', measuredValues[14]);
-    newRow.setNum('MCbaseline' + mcBaselineStageNames[0] + '2', measuredValues[15]);
-    newRow.setNum('MCbaseline' + mcBaselineStageNames[1] + '2', measuredValues[16]);
-    newRow.setNum('MCbaseline' + mcBaselineStageNames[2] + '2', measuredValues[17]);
-    newRow.setNum('MCbaseline' + mcBaselineStageNames[3] + '2', measuredValues[18]);
+    newRow.setNum('MCbaseline_' + mcBaselineStageNames[0], measuredValues[11]);
+    newRow.setNum('MCbaseline_' + mcBaselineStageNames[1], measuredValues[12]);
+    newRow.setNum('MCbaseline_' + mcBaselineStageNames[2], measuredValues[13]);
+    newRow.setNum('MCbaseline_' + mcBaselineStageNames[3], measuredValues[14]);
+    newRow.setNum('MCbaseline_' + mcBaselineStageNames[4], measuredValues[15]);
+    newRow.setNum('MCbaseline_' + mcBaselineStageNames[5], measuredValues[16]);
+    newRow.setNum('MCbaseline_' + mcBaselineStageNames[6], measuredValues[17]);
+    newRow.setNum('MCbaseline_' + mcBaselineStageNames[7], measuredValues[18]);
 
     //hg post results
-    newRow.setNum('HGbelowcolPost' + hgPostStageNames[0] + '1', measuredValues[19]);
-    newRow.setNum('HGbelowcolPost' + hgPostStageNames[1] + '1', measuredValues[20]);
-    newRow.setNum('HGbelowcolPost' + hgPostStageNames[0] + '2', measuredValues[21]);
-    newRow.setNum('HGbelowcolPost' + hgPostStageNames[1] + '2', measuredValues[22]);
-    newRow.setNum('HGabovecolPost' + hgPostStageNames[0], measuredValues[23]);
-    newRow.setNum('HGabovecolPost' + hgPostStageNames[1], measuredValues[24]);
+    newRow.setNum('HGbelowcolPost_' + hgPostStageNames[0] + '_1', measuredValues[19]);
+    newRow.setNum('HGbelowcolPost_' + hgPostStageNames[1] + '_1', measuredValues[20]);
+    newRow.setNum('HGbelowcolPost_' + hgPostStageNames[0] + '_2', measuredValues[21]);
+    newRow.setNum('HGbelowcolPost_' + hgPostStageNames[1] + '_2', measuredValues[22]);
+    newRow.setNum('HGabovecolPost_' + hgPostStageNames[0], measuredValues[23]);
+    newRow.setNum('HGabovecolPost_' + hgPostStageNames[1], measuredValues[24]);
 
     //mc test results
-    newRow.setNum('MCtest' + mcTestStageNames[0] + '1', measuredValues[25]);
-    newRow.setNum('MCtest' + mcTestStageNames[1] + '1', measuredValues[26]);
-    newRow.setNum('MCtest' + mcTestStageNames[2] + '1', measuredValues[27]);
-    newRow.setNum('MCtest' + mcTestStageNames[3] + '1', measuredValues[28]);
-    newRow.setNum('MCtest' + mcTestStageNames[0] + '2', measuredValues[29]);
-    newRow.setNum('MCtest' + mcTestStageNames[1] + '2', measuredValues[30]);
-    newRow.setNum('MCtest' + mcTestStageNames[2] + '2', measuredValues[31]);
-    newRow.setNum('MCtest' + mcTestStageNames[3] + '2', measuredValues[32]);
+    newRow.setNum('MCtest_' + mcTestStageNames[0], measuredValues[25]);
+    newRow.setNum('MCtest_' + mcTestStageNames[1], measuredValues[26]);
+    newRow.setNum('MCtest_' + mcTestStageNames[2], measuredValues[27]);
+    newRow.setNum('MCtest_' + mcTestStageNames[3], measuredValues[28]);
+    newRow.setNum('MCtest_' + mcTestStageNames[4], measuredValues[29]);
+    newRow.setNum('MCtest_' + mcTestStageNames[5], measuredValues[30]);
+    newRow.setNum('MCtest_' + mcTestStageNames[6], measuredValues[31]);
+    newRow.setNum('MCtest_' + mcTestStageNames[7], measuredValues[32]);
 
     saveTable(resultsTable, 'results_' + participantID + '.csv');
     exportTrackingTable();
