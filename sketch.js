@@ -19,7 +19,7 @@ var hgPreNullOrder, hgPostNullOrder;
 var mcBaselineNameNullOrder, mcBaselineStartValNullOrder;
 var mcTestNameNullOrder, mcTestStartValNullOrder;
 var mcBaselineOrder, mcTestOrder;
-var mcTestStartVals;
+var mcBaselineStartVals, mcTestStartVals;
 
 var adaptStageDurationInput, participantInput;
 var devGUI;
@@ -165,19 +165,31 @@ function initialize() {
 
     hgPreNullOrder = ['NA', 'A'];
     hgPostNullOrder = ['NA', 'A'];
+
+    var startValOffsets = [random(0.5, 1), random(0.5, 1), random(0.5, 1), random(0.5, 1)];
     mcBaselineNameNullOrder = ['hrLU', 'hrRD', 'vgLU', 'vgRD', 'hgLU', 'hgRD', 'vrLU', 'vrRD'];
-    mcBaselineStartValNullOrder = [1, 1, -1, -1, -1, -1, 1, 1];
+    mcBaselineStartValNullOrder = [
+        startValOffsets[0],
+        startValOffsets[0],
+        -startValOffsets[0],
+        -startValOffsets[0],
+        -startValOffsets[1],
+        -startValOffsets[1],
+        startValOffsets[1],
+        startValOffsets[1]
+    ];
     mcBaselineOrder = generateMcOrder();
+
     mcTestNameNullOrder = ['hgNA', 'hgA', 'vrNA', 'vrA', 'hrNA', 'hrA', 'vgNA', 'vgA'];
     mcTestStartValNullOrder = [
-        random(-1, -0.5),
-        random(-1, -0.5),
-        random(0.5, 1),
-        random(0.5, 1),
-        random(0.5, 1),
-        random(0.5, 1),
-        random(-1, -0.5),
-        random(-1, -0.5)
+        -startValOffsets[2],
+        -startValOffsets[2],
+        startValOffsets[2],
+        startValOffsets[2],
+        startValOffsets[3],
+        startValOffsets[3],
+        -startValOffsets[3],
+        -startValOffsets[3],
     ];
     mcTestOrder = generateMcOrder();
 
@@ -242,7 +254,7 @@ function setParticipantDependentStageSettings() {
         'end'  // 40
     ];
 
-    var mcBaselineStartVals = selectFromArray(mcBaselineStartValNullOrder, mcBaselineOrder);
+    mcBaselineStartVals = selectFromArray(mcBaselineStartValNullOrder, mcBaselineOrder);
     mcTestStartVals = selectFromArray(mcTestStartValNullOrder, mcTestOrder);
 
     measuredValues = [
@@ -973,7 +985,7 @@ function changeSliderValue(change) {
     if (stageToValue[stage] != null) {
         sliders[stageToValue[stage]].value(measuredValues[stageToValue[stage]] + change);
         arrowDir = change / abs(change);
-        arrowLength = 0.025 + abs(change)*0.5;
+        arrowLength = 0.025 + abs(change) * 0.5;
         arrowUpTime = millis();
     }
 }
@@ -1494,6 +1506,7 @@ function saveResults() { //DEV
     newRow.setString('hrPreTestOrder', hgPreStageNames.join('_'));
     newRow.setString('hgPostOrder', hgPostStageNames.join('_'));
     newRow.setString('mcBaselineOrder', mcBaselineStageNames.join('_'));
+    newRow.setString('mcBaselineStartVals', mcBaselineStartVals.join('_'));
     newRow.setString('mcTestOrder', mcTestStageNames.join('_'));
     newRow.setString('mcTestStartVals', mcTestStartVals.join('_'));
 
