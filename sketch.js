@@ -11,7 +11,7 @@ var adaptStageDuration, adaptDuration, adaptCounter, adaptMaskSwitchTime, adaptS
 var freeViewing;
 
 var prevButton, nextButton, finishButton;
-var arrowDir;
+var arrowDir, arrowUpTime, arrowUpDuration, arrowLength;
 
 var stageToValue, measuredValues, measuredValuesDefault, ranges, stageNames, stageMinNames, stageMaxNames;
 var sliders;
@@ -105,8 +105,8 @@ function setParameters() {
 
     stageToValue = [null, null, null, null, 0, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, null, 11, 12, 13, 14, 15, 16, 17, 18, null, null, null, null, 19, 20, 21, 22, 23, 24, null, null, 25, 26, 27, 28, 29, 30, 31, 32, null];
     ranges = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]];
-    stageMinNames = ['darker','darker','darker','darker','darker','darker','darker','darker','darker','darker','darker','green','green','green','green','green','green','green','green','darker','darker','darker','darker','darker','darker','green','green','green','green','green','green','green','green'];
-    stageMaxNames = ['lighter','lighter','lighter','lighter','lighter','lighter','lighter','lighter','lighter','lighter','lighter','red','red','red','red','red','red','red','red','lighter','lighter','lighter','lighter','lighter','lighter','red','red','red','red','red','red','red','red'];
+    stageMinNames = ['darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'green', 'green', 'green', 'green', 'green', 'green', 'green', 'green', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'green', 'green', 'green', 'green', 'green', 'green', 'green', 'green'];
+    stageMaxNames = ['lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'red'];
 
     freeViewing = false;
     devGUI = false;
@@ -182,6 +182,9 @@ function initialize() {
     mcTestOrder = generateMcOrder();
 
     arrowDir = 0;
+    arrowLength = 0;
+    arrowUpTime = -1;
+    arrowUpDuration = 300;
 }
 
 function setParticipantDependentStageSettings() {
@@ -593,9 +596,9 @@ function draw() {
     finishButton.position(width * 0.97 - width * 0.1, height * 0.88);
     styleElement(finishButton, width * 0.1, height * 0.08, fontSize);
 
-    if(devGUI == false && saved == false){
+    if (devGUI == false && saved == false) {
         fill(1);
-        textSize(fontSize*1.5);
+        textSize(fontSize * 1.5);
         text('press SPACE to continue', width * 0.5, height * 0.9);
         noFill();
     }
@@ -941,6 +944,10 @@ function changeStage(change) {
         }
         handleSliderVisibility();
     }
+
+    arrowDir = 0;
+    arrowLength = 0;
+    arrowUpTime = -1;
 }
 
 function handleSliderVisibility() {
@@ -966,6 +973,8 @@ function changeSliderValue(change) {
     if (stageToValue[stage] != null) {
         sliders[stageToValue[stage]].value(measuredValues[stageToValue[stage]] + change);
         arrowDir = change / abs(change);
+        arrowLength = 0.025 + abs(change)*0.5;
+        arrowUpTime = millis();
     }
 }
 
@@ -984,33 +993,36 @@ function drawSlider() {
             noFill();
         }
         else {
-            if (arrowDir != 0) {
-                stroke(1);
-                strokeWeight(5);
+            if (arrowDir != 0 && arrowUpTime != -1 && millis() - arrowUpTime < arrowUpDuration) {
+                strokeCap(ROUND);
+                stroke(1, pow(1 - (millis() - arrowUpTime) / arrowUpDuration, 1 / 15));
+                strokeWeight(6);
+                var spikeLength = width * 0.0085;
                 line(
-                    width * 0.45, height * (0.045 + 0.085) * 0.5,
-                    width * 0.55, height * (0.045 + 0.085) * 0.5
+                    width * (0.5 - arrowLength * 0.5), height * (0.045 + 0.085) * 0.5,
+                    width * (0.5 + arrowLength * 0.5), height * (0.045 + 0.085) * 0.5
                 );
                 if (arrowDir == -1) {
                     line(
-                        width * 0.45, height * (0.045 + 0.085) * 0.5,
-                        width * 0.45 + width * 0.0125 * cos(TAU * 0.125), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(TAU * 0.125)
+                        width * (0.5 - arrowLength * 0.5), height * (0.045 + 0.085) * 0.5,
+                        width * (0.5 - arrowLength * 0.5) + spikeLength * cos(TAU * 0.125), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(TAU * 0.125)
                     );
                     line(
-                        width * 0.45, height * (0.045 + 0.085) * 0.5,
-                        width * 0.45 + width * 0.0125 * cos(-TAU * 0.125), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(-TAU * 0.125)
+                        width * (0.5 - arrowLength * 0.5), height * (0.045 + 0.085) * 0.5,
+                        width * (0.5 - arrowLength * 0.5) + spikeLength * cos(-TAU * 0.125), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(-TAU * 0.125)
                     );
                 }
                 if (arrowDir == 1) {
                     line(
-                        width * 0.55, height * (0.045 + 0.085) * 0.5,
-                        width * 0.55 + width * 0.0125 * cos(-TAU * 0.625), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(-TAU * 0.625)
+                        width * (0.5 + arrowLength * 0.5), height * (0.045 + 0.085) * 0.5,
+                        width * (0.5 + arrowLength * 0.5) + spikeLength * cos(-TAU * 0.625), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(-TAU * 0.625)
                     );
                     line(
-                        width * 0.55, height * (0.045 + 0.085) * 0.5,
-                        width * 0.55 + width * 0.0125 * cos(TAU * 0.625), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(TAU * 0.625)
+                        width * (0.5 + arrowLength * 0.5), height * (0.045 + 0.085) * 0.5,
+                        width * (0.5 + arrowLength * 0.5) + spikeLength * cos(TAU * 0.625), height * (0.045 + 0.085) * 0.5 + width * 0.0125 * sin(TAU * 0.625)
                     );
                 }
+                strokeCap(SQUARE);
             }
             noStroke();
             strokeWeight(1);
