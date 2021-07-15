@@ -1450,8 +1450,10 @@ function saveResults() { //DEV
     resultsTable.addColumn('hrPreTestOrder');
     resultsTable.addColumn('hgPostOrder');
     resultsTable.addColumn('mcBaselineOrder');
+    resultsTable.addColumn('mcBaselineStartVals');
     resultsTable.addColumn('mcTestOrder');
     resultsTable.addColumn('mcTestStartVals');
+    
 
     //hg pre results
     resultsTable.addColumn('HGnocolPre_' + hgPreNullOrder[0] + '_1');
