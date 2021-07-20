@@ -310,7 +310,7 @@ function createSliders() {
 function calculateSizes() {
     stimX = width * 0.5;
     stimY = height * 0.5;
-    stimSize = max(width, height) * 0.3;
+    stimSize = max(width, height) * 0.25;
 
     fontSize = width * 0.015;
     var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
