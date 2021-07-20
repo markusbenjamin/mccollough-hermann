@@ -197,6 +197,8 @@ function initialize() {
     arrowLength = 0;
     arrowUpTime = -1;
     arrowUpDuration = 300;
+
+    noCursor();
 }
 
 function setParticipantDependentStageSettings() {
@@ -770,6 +772,7 @@ function startCalibration(w, h) {
             calibDots.push([stimX + i * w / 3, stimY + j * h / 3, 5])
         }
     }
+    cursor();
 }
 
 function runCalibration() {
@@ -795,6 +798,7 @@ function runCalibration() {
 function endCalibration() {
     window.removeEventListener('click', onmouseclick);
     calibration = false;
+    noCursor();
 }
 
 function mousePressed() {
