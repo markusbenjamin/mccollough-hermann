@@ -512,8 +512,12 @@ function draw() {
                 endAdaptStage();
             }
             rectMode(CORNER);
+            stroke(1);
+            noFill();
+            rect(width * 0.33, height * 0.05, width * 0.33, height * 0.02);
+            noStroke();
             fill(1);
-            rect(width * 0.33, height * 0.05, width * 0.33 - width * 0.33 * (millis() - adaptAwayDuration - adaptStartTime) / (adaptStageDuration * 60 * 1000), height * 0.02);
+            rect(width * 0.33, height * 0.05, width * 0.33 - width * 0.33 * constrain((millis() - adaptAwayDuration - adaptStartTime) / (adaptStageDuration * 60 * 1000), 0, 1), height * 0.02);
             rectMode(CENTER);
             noFill();
         }
@@ -610,7 +614,7 @@ function draw() {
     finishButton.position(width * 0.97 - width * 0.1, height * 0.88);
     styleElement(finishButton, width * 0.1, height * 0.08, fontSize);
 
-    if (devGUI == false && saved == false) {
+    if (devGUI == false && saved == false && stage != adaptStage) {
         fill(1);
         textSize(fontSize * 1.5);
         text('press SPACE to continue', width * 0.5, height * 0.9);
@@ -1102,7 +1106,10 @@ function drawWhiteComparisonRects() {
 }
 
 function keyPressed() {
-    if (keyCode === 32 || keyCode === 32) {
+    if ((keyCode === 32 || keyCode === 32) && stage != adaptStage) {
+        goToNextStage();
+    }
+    if (key === 't' || key === 'T' && stage === adaptStage) {
         goToNextStage();
     }
     if (keyCode === 8 || keyCode === 8) {
@@ -1457,7 +1464,7 @@ function saveResults() { //DEV
     resultsTable.addColumn('mcBaselineStartVals');
     resultsTable.addColumn('mcTestOrder');
     resultsTable.addColumn('mcTestStartVals');
-    
+
 
     //hg pre results
     resultsTable.addColumn('HGnocolPre_' + hgPreNullOrder[0] + '_1');
