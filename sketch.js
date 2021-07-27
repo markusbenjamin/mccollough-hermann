@@ -24,6 +24,8 @@ var mcBaselineStartVals, mcTestStartVals;
 var adaptStageDurationInput, participantInput;
 var devGUI;
 
+var instructionsTable, instructions;
+
 var saved;
 
 //load gaze filter
@@ -69,6 +71,11 @@ var discrAwayStatusDuration, discrAwayJudgementTime, discrAwayJudgementAccumulat
 var discrChangeTime;
 var discrJudgement;
 var discrStatus;
+
+
+function preload() {
+    instructionsTable = loadTable('https://docs.google.com/spreadsheets/d/e/2PACX-1vSJ1vXABpBDoFFWhCW0zpzgQwGgAy8eKS_fIMYfcjE9cmykTB6fbM4Vq2JinqOv8kVgL4hiZDkf7ej5/pub?gid=0&single=true&output=csv', 'csv');
+}
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
@@ -166,30 +173,37 @@ function initialize() {
     hgPreNullOrder = ['NA', 'A'];
     hgPostNullOrder = ['NA', 'A'];
 
-    var startValOffsets = [random(0.5, 1), random(0.5, 1), random(0.5, 1), random(0.5, 1)];
+    var startValOffsets = [
+        random(0.125, 0.375), //baseline horizontal red/-green leftup
+        random(0.125, 0.375), //baseline horizontal red/-green bottomright
+        random(0.125, 0.375), //baseline vertical red/-green leftup
+        random(0.125, 0.375), //baseline vertical red/-green bottomright
+    ];
     mcBaselineNameNullOrder = ['hrLU', 'hrRD', 'vgLU', 'vgRD', 'hgLU', 'hgRD', 'vrLU', 'vrRD'];
     mcBaselineStartValNullOrder = [
-        startValOffsets[0],
-        startValOffsets[0],
-        -startValOffsets[0],
-        -startValOffsets[0],
-        -startValOffsets[1],
-        -startValOffsets[1],
-        startValOffsets[1],
-        startValOffsets[1]
+        startValOffsets[0],  //horizontal red leftup
+        startValOffsets[1],  //horizontal red bottomright
+        -startValOffsets[2], //vertical green leftup
+        -startValOffsets[3], //vertical green bottomright
+        -startValOffsets[0], //horizontal green leftup
+        -startValOffsets[1], //horizontal green bottomright
+        startValOffsets[2],  //vertical red leftup
+        startValOffsets[3]   //vertical red bottomright
     ];
     mcBaselineOrder = generateMcOrder();
 
+    var hRStartVal = (startValOffsets[0] + startValOffsets[1]) / 2;
+    var vRStartVal = (startValOffsets[2] + startValOffsets[3]) / 2;
     mcTestNameNullOrder = ['hgNA', 'hgA', 'vrNA', 'vrA', 'hrNA', 'hrA', 'vgNA', 'vgA'];
     mcTestStartValNullOrder = [
-        -startValOffsets[2],
-        -startValOffsets[2],
-        startValOffsets[2],
-        startValOffsets[2],
-        startValOffsets[3],
-        startValOffsets[3],
-        -startValOffsets[3],
-        -startValOffsets[3],
+        -hRStartVal, //horizontal green nonadapt
+        -hRStartVal, //horizontal green adapt
+        vRStartVal,  //vertical red nonadapt
+        vRStartVal,  //vertical red adapt
+        hRStartVal,  //horizontal red nonadapt
+        hRStartVal,  //horizontal red adapt
+        -vRStartVal, //vertical green nonadapt
+        -vRStartVal, //vertical grenn adapt
     ];
     mcTestOrder = generateMcOrder();
 
@@ -199,6 +213,8 @@ function initialize() {
     arrowUpDuration = 300;
 
     noCursor();
+
+    instructions = instructionsTable.getArray();
 }
 
 function setParticipantDependentStageSettings() {
@@ -334,18 +350,27 @@ function draw() {
 
     if (stage == 0) { //exp start
         fill(1);
-        textSize(fontSize * 2);
-        text('experiment settings', width * 0.5, height * 0.2);
+        textSize(fontSize * instructions[0][1]);
+        text(instructions[0][2], width * 0.5, height * 0.25, width * 0.75, height * 0.4);
+
+        textSize(fontSize * 2, width * 0.5, height * 0.4);
+        text('experiment settings', width * 0.5, height * 0.5);
+
         textAlign(LEFT);
         textSize(fontSize * 1.5);
-        text('adaptation time:', width * 0.3, height * 0.3);
-        adaptStageDurationInput.position(width * 0.5 - width * 0.1, height * 0.325);
+        text('adaptation time:', width * 0.3, height * 0.6);
+        adaptStageDurationInput.position(width * 0.575 - width * 0.1, height * 0.56);
         styleElement(adaptStageDurationInput, width * 0.2, height * 0.05, fontSize * 1.5);
 
-        text('participant ID:', width * 0.3, height * 0.6);
-        participantInput.position(width * 0.5 - width * 0.1, height * 0.625);
+        text('participant ID:', width * 0.3, height * 0.75);
+        participantInput.position(width * 0.575 - width * 0.1, height * 0.71);
         styleElement(participantInput, width * 0.2, height * 0.05, fontSize * 1.5);
         textAlign(CENTER);
+
+        stroke(1);
+        line(mouseX - fixCrossSize * 0.5, mouseY, mouseX + fixCrossSize * 0.5, mouseY);
+        line(mouseX, mouseY - fixCrossSize * 0.5, mouseX, mouseY + fixCrossSize * 0.5);
+        noStroke();
     }
     if (stage == 1) { //calib 1
         runCalibration();
@@ -357,8 +382,8 @@ function draw() {
     }
     if (stage == 3) { //HG warmup instructions
         fill(1);
-        textSize(fontSize * 2);
-        text('HG warmup instructions', width * 0.5, height * 0.2);
+        textSize(fontSize * instructions[1][1]);
+        text(instructions[1][2], width * 0.5, height * 0.5, width * 0.75, height * 0.45);
     }
     if (stage == 4) { //HG warmup
         drawMcCollough(color(1), stimSize * 1, 6, stimX, stimY, 1);
@@ -371,63 +396,73 @@ function draw() {
     }
     if (stage == 5) { //HG instructions 1
         fill(1);
-        textSize(fontSize * 2);
-        text('HG instructions', width * 0.5, height * 0.2);
+        textSize(fontSize * instructions[2][1]);
+        text(instructions[2][2], width * 0.5, height * 0.25, width * 0.75, height * 0.45);
+        noStroke();
+
+        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.375, height * 0.625, true);
+        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][0], width * 0.375, height * 0.625, stimSize * 0.7);
+        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][1], width * 0.375, height * 0.625, stimSize * 0.7);
+        textSize(fontSize);
+        text('or', width * 0.5, height * 0.625)
+        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.625, height * 0.625, true);
+        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * 0.625, height * 0.625, stimSize * 0.7);
+        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * 0.625, height * 0.625, stimSize * 0.7);
     }
     if (stage == 6) { //HG nocol a/na pre 1
         drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]], stimX, stimY, stimSize);
     }
     if (stage == 7) { //HG nocol a/na pre 1
         drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]], stimX, stimY, stimSize);
     }
     if (stage == 8) { //HG nocol a/na pre 2
         drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]], stimX, stimY, stimSize);
     }
     if (stage == 9) { //HG nocol a/na pre 2
         drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]], stimX, stimY, stimSize);
     }
     if (stage == 10) { //HG below a/na pre 1
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]], stimX, stimY, stimSize);
     }
     if (stage == 11) { //HG below a/na pre 1
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]], stimX, stimY, stimSize);
     }
     if (stage == 12) { //HG below a/na pre 2
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]], stimX, stimY, stimSize);
     }
     if (stage == 13) { //HG below a/na pre 2
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]], stimX, stimY, stimSize);
     }
     if (stage == 14) { //HG above a/na pre
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]], stimX, stimY, stimSize);
     }
     if (stage == 15) { //HG above a/na pre
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]], stimX, stimY, stimSize);
     }
     if (stage == 16) { //MC baseline instructions
         fill(1);
-        textSize(fontSize * 2);
-        text('MC baseline instructions', width * 0.5, height * 0.2);
+        textSize(fontSize * instructions[3][1]);
+        text(instructions[3][2], width * 0.5, height * 0.5, width * 0.75, height * 0.45);
     }
     if (stage == 17) { //MC baseline 1
         drawMcBaseline(mcBaselineOrder[0]);
@@ -458,8 +493,8 @@ function draw() {
     }
     if (stage == 26) { //adapt instructions
         fill(1);
-        textSize(fontSize * 2);
-        text('McCollough adaptation instructions', width * 0.5, height * 0.2);
+        textSize(fontSize * instructions[4][1]);
+        text(instructions[4][2], width * 0.5, height * 0.5, width * 0.5, height * 0.5);
     }
     if (stage == adaptStage) { //adapt
         if (adaptFinished) {
@@ -477,7 +512,7 @@ function draw() {
                 if (millis() - adaptMaskSwitchTime < adaptDuration) {
                     var flicker = (adaptCounter / 2) % 2;
                     drawMcCollough(adaptColors[flicker], stimSize, mcN, stimX, stimY, flicker);
-                    var naDims = getNonadaptDims([-1, 1]);
+                    var naDims = getNonadaptDims([-1, 1], stimX, stimY, stimSize);
                     var x = naDims[0];
                     var y = naDims[1];
                     fill(0);
@@ -528,46 +563,56 @@ function draw() {
     }
     if (stage == 28) { //HG instructions 2
         fill(1);
-        textSize(fontSize * 2);
-        text('HG instructions', width * 0.5, height * 0.2);
+        textSize(fontSize * instructions[5][1]);
+        text(instructions[5][2], width * 0.5, height * 0.25, width * 0.75, height * 0.45);
+        noStroke();
+
+        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.375, height * 0.625, true);
+        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][0], width * 0.375, height * 0.625, stimSize * 0.7);
+        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][1], width * 0.375, height * 0.625, stimSize * 0.7);
+        textSize(fontSize);
+        text('or', width * 0.5, height * 0.625)
+        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.625, height * 0.625, true);
+        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * 0.625, height * 0.625, stimSize * 0.7);
+        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * 0.625, height * 0.625, stimSize * 0.7);
     }
     if (stage == 29) { //HG below a/na post 1
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]], stimX, stimY, stimSize);
     }
     if (stage == 30) { //HG below a/na post 1
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]], stimX, stimY, stimSize);
     }
     if (stage == 31) { //HG below a/na post 2
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]], stimX, stimY, stimSize);
     }
     if (stage == 32) { //HG below a/na post 2
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]], stimX, stimY, stimSize);
     }
     if (stage == 33) { //HG above a/na post
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[0]], stimX, stimY, stimSize);
     }
     if (stage == 34) { //HG above a/na post
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, false);
         drawFixCross(stimX, stimY);
-        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]]);
+        drawIllusionStrengthMeter(measuredValues[stageToValue[stage]], [[-1, 1], [1, -1]][hgPreOrder()[1]], stimX, stimY, stimSize);
     }
     if (stage == 35) { //calib 3
         runCalibration();
     }
     if (stage == 36) { //MC test instructions
         fill(1);
-        textSize(fontSize * 2);
-        text('McCollough test instructions', width * 0.5, height * 0.2);
+        textSize(fontSize * instructions[6][1]);
+        text(instructions[6][2], width * 0.5, height * 0.5, width * 0.75, height * 0.45);
     }
     if (stage == 37) { //MC test 1
         drawMcTest(mcTestOrder[0]);
@@ -622,6 +667,7 @@ function draw() {
     }
 
     saveTracking();
+
 
     /*if (freeViewing) {
         console.log('free viewing')
@@ -1140,8 +1186,19 @@ function keyPressed() {
     }
 }
 
-function drawIllusionStrengthMeter(illusionStrength, placing) {
-    var naDims = getNonadaptDims(placing);
+function drawIllusionStrengthMeterOppositeCircle(placing, sX, sY, sS) {
+    var naDims = getNonadaptDims(placing, sX, sY, sS);
+    var x = naDims[0];
+    var y = naDims[1];
+    stroke(1, 1, 1);
+    strokeWeight(3);
+    ellipse(x, y, naDims[2] * 0.5, naDims[3] * 0.5);
+    noStroke();
+    strokeWeight(1);
+}
+
+function drawIllusionStrengthMeter(illusionStrength, placing, sX, sY, sS) {
+    var naDims = getNonadaptDims(placing, sX, sY, sS);
     var x = naDims[0];
     var y = naDims[1];
     fill(1);
@@ -1149,8 +1206,8 @@ function drawIllusionStrengthMeter(illusionStrength, placing) {
     rect(x, y, naDims[2], naDims[3]);
     noFill();
 
-    var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
-    var illusionSpotSize = round(hgDims[1] * 1.5);
+    var hgDims = hermannGridDimensions(hgN, hgR, sS);
+    var illusionSpotSize = round(hgDims[1] * 1.75);
     for (var i = -illusionSpotSize / 2; i < illusionSpotSize / 2; i++) {
         for (var j = -illusionSpotSize / 2; j < illusionSpotSize / 2; j++) {
             var d = dist(0, 0, i, j) / dist(0, 0, illusionSpotSize / 2, illusionSpotSize / 2);
@@ -1174,11 +1231,11 @@ function illusionMain(d, hsp, ab, min, max) {
     return 1 - illusionG(d, hsp, ab, min, max);
 }
 
-function getNonadaptDims(placing) {
-    var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
+function getNonadaptDims(placing, sX, sY, sS) {
+    var hgDims = hermannGridDimensions(hgN, hgR, sS);
     var translate = 1.5 * (hgDims[0] + hgDims[1]);
-    var x = stimX + placing[0] * translate;
-    var y = stimY + placing[1] * translate;
+    var x = sX + placing[0] * translate;
+    var y = sY + placing[1] * translate;
     return [x, y, 3 * hgDims[0] + 2 * hgDims[1], 3 * hgDims[0] + 2 * hgDims[1]];
 }
 
@@ -1362,7 +1419,7 @@ function drawMcTest(which) {
 
 function drawMcBaselineMask(placing) {
     var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
-    var naDims = getNonadaptDims(placing);
+    var naDims = getNonadaptDims(placing, stimX, stimY, stimSize);
 
     fill(0);
     stroke(0);
@@ -1379,7 +1436,7 @@ function drawMcBaselineMask(placing) {
 
 function drawMcTestMask(placing) {
     var hgDims = hermannGridDimensions(hgN, hgR, stimSize);
-    var naDims = getNonadaptDims(placing);
+    var naDims = getNonadaptDims(placing, stimX, stimY, stimSize);
 
     fill(0);
     stroke(0);
