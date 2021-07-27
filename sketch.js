@@ -659,7 +659,7 @@ function draw() {
     finishButton.position(width * 0.97 - width * 0.1, height * 0.88);
     styleElement(finishButton, width * 0.1, height * 0.08, fontSize);
 
-    if (devGUI == false && saved == false && stage != adaptStage) {
+    if (devGUI == false && saved == false && stage != adaptStage && calibration == false) {
         fill(1);
         textSize(fontSize * 1.5);
         text('press SPACE to continue', width * 0.5, height * 0.9);
