@@ -112,8 +112,8 @@ function setParameters() {
 
     stageToValue = [null, null, null, null, 0, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, null, 11, 12, 13, 14, 15, 16, 17, 18, null, null, null, null, 19, 20, 21, 22, 23, 24, null, null, 25, 26, 27, 28, 29, 30, 31, 32, null];
     ranges = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1], [-1, 1]];
-    stageMinNames = ['darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'green', 'green', 'green', 'green', 'green', 'green', 'green', 'green', 'darker', 'darker', 'darker', 'darker', 'darker', 'darker', 'green', 'green', 'green', 'green', 'green', 'green', 'green', 'green'];
-    stageMaxNames = ['lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'lighter', 'red', 'red', 'red', 'red', 'red', 'red', 'red', 'red'];
+    stageMinNames = ['sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'zöld', 'zöld', 'zöld', 'zöld', 'zöld', 'zöld', 'zöld', 'zöld', 'sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'sötétebb', 'zöld', 'zöld', 'zöld', 'zöld', 'zöld', 'zöld', 'zöld', 'zöld'];
+    stageMaxNames = ['világosabb', 'világosabb', 'világosabb', 'világosabb', 'világosabb', 'világosabb', 'világosabb', 'világosabb', 'világosabb', 'világosabb', 'világosabb', 'piros', 'piros', 'piros', 'piros', 'piros', 'piros', 'piros', 'piros', 'világosabb', 'világosabb', 'világosabb', 'világosabb', 'világosabb', 'világosabb', 'piros', 'piros', 'piros', 'piros', 'piros', 'piros', 'piros', 'piros'];
 
     freeViewing = false;
     devGUI = false;
@@ -404,7 +404,9 @@ function draw() {
         drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][0], width * 0.375, height * 0.625, stimSize * 0.7);
         drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][1], width * 0.375, height * 0.625, stimSize * 0.7);
         textSize(fontSize);
+        fill(1);
         text('vagy', width * 0.5, height * 0.625)
+        noFill();
         drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.625, height * 0.625, true);
         drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * 0.625, height * 0.625, stimSize * 0.7);
         drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * 0.625, height * 0.625, stimSize * 0.7);
@@ -571,7 +573,9 @@ function draw() {
         drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][0], width * 0.375, height * 0.625, stimSize * 0.7);
         drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][1], width * 0.375, height * 0.625, stimSize * 0.7);
         textSize(fontSize);
+        fill(1);
         text('vagy', width * 0.5, height * 0.625)
+        noFill();
         drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.625, height * 0.625, true);
         drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * 0.625, height * 0.625, stimSize * 0.7);
         drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * 0.625, height * 0.625, stimSize * 0.7);
