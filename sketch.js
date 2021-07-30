@@ -354,15 +354,15 @@ function draw() {
         text(instructions[0][2], width * 0.5, height * 0.25, width * 0.75, height * 0.4);
 
         textSize(fontSize * 2, width * 0.5, height * 0.4);
-        text('experiment settings', width * 0.5, height * 0.5);
+        text('kísérleti beállítások', width * 0.5, height * 0.5);
 
         textAlign(LEFT);
         textSize(fontSize * 1.5);
-        text('adaptation time:', width * 0.3, height * 0.6);
+        text('adaptációs idő:', width * 0.3, height * 0.6);
         adaptStageDurationInput.position(width * 0.575 - width * 0.1, height * 0.56);
         styleElement(adaptStageDurationInput, width * 0.2, height * 0.05, fontSize * 1.5);
 
-        text('participant ID:', width * 0.3, height * 0.75);
+        text('alany ID:', width * 0.3, height * 0.75);
         participantInput.position(width * 0.575 - width * 0.1, height * 0.71);
         styleElement(participantInput, width * 0.2, height * 0.05, fontSize * 1.5);
         textAlign(CENTER);
@@ -404,7 +404,7 @@ function draw() {
         drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][0], width * 0.375, height * 0.625, stimSize * 0.7);
         drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][1], width * 0.375, height * 0.625, stimSize * 0.7);
         textSize(fontSize);
-        text('or', width * 0.5, height * 0.625)
+        text('vagy', width * 0.5, height * 0.625)
         drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.625, height * 0.625, true);
         drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * 0.625, height * 0.625, stimSize * 0.7);
         drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * 0.625, height * 0.625, stimSize * 0.7);
@@ -500,7 +500,7 @@ function draw() {
         if (adaptFinished) {
             fill(1);
             textSize(fontSize * 2);
-            text('adaptation phase finished', stimX, stimY);
+            text('vége az adaptációnak', stimX, stimY);
             noFill();
         }
         else {
@@ -571,7 +571,7 @@ function draw() {
         drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][0], width * 0.375, height * 0.625, stimSize * 0.7);
         drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][1], width * 0.375, height * 0.625, stimSize * 0.7);
         textSize(fontSize);
-        text('or', width * 0.5, height * 0.625)
+        text('vagy', width * 0.5, height * 0.625)
         drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.625, height * 0.625, true);
         drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * 0.625, height * 0.625, stimSize * 0.7);
         drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * 0.625, height * 0.625, stimSize * 0.7);
@@ -639,16 +639,16 @@ function draw() {
         drawMcTest(mcTestOrder[7]);
     }
     if (stage == endStage) { //end
-        var savedString
+        var savedString;
         if (saved) {
-            savedString = 'saved';
+            savedString = 'elmentve';
         }
         else {
-            savedString = 'not yet saved';
+            savedString = 'elmentése nem sikerült';
         }
         fill(1);
         textSize(fontSize * 2);
-        text('experiment finished\n\nresults ' + savedString, width * 0.5, height * 0.4);
+        text('vége a kísérletnek\n\neredmények ' + savedString, width * 0.5, height * 0.4);
         noFill();
     }
 
@@ -662,7 +662,7 @@ function draw() {
     if (devGUI == false && saved == false && stage != adaptStage && calibration == false) {
         fill(1);
         textSize(fontSize * 1.5);
-        text('press SPACE to continue', width * 0.5, height * 0.9);
+        text('továbblépése SPACE-szel', width * 0.5, height * 0.9);
         noFill();
     }
 
@@ -831,7 +831,7 @@ function runCalibration() {
             if (i == 4 && 5 < total(calibDots)[2]) {
                 fill(1);
                 textSize(fontSize * 1.5);
-                text('click each yellow dot five times', calibDots[i][0], calibDots[i][1]);
+                text('kattints minden sárga pöttyre ötször', calibDots[i][0], calibDots[i][1]);
             }
             else {
                 fill(0.15, 1, calibDots[i][2] / 5);
