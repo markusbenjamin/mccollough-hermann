@@ -174,10 +174,10 @@ function initialize() {
     hgPostNullOrder = ['NA', 'A'];
 
     var startValOffsets = [
-        random(0.125, 0.375), //baseline horizontal red/-green leftup
-        random(0.125, 0.375), //baseline horizontal red/-green bottomright
-        random(0.125, 0.375), //baseline vertical red/-green leftup
-        random(0.125, 0.375), //baseline vertical red/-green bottomright
+        random(0, 0.1), //baseline horizontal red/-green leftup
+        random(0, 0.1), //baseline horizontal red/-green bottomright
+        random(0, 0.1), //baseline vertical red/-green leftup
+        random(0, 0.1), //baseline vertical red/-green bottomright
     ];
     mcBaselineNameNullOrder = ['hrLU', 'hrRD', 'vgLU', 'vgRD', 'hgLU', 'hgRD', 'vrLU', 'vrRD'];
     mcBaselineStartValNullOrder = [
@@ -195,7 +195,7 @@ function initialize() {
     var hRStartVal = (startValOffsets[0] + startValOffsets[1]) / 2;
     var vRStartVal = (startValOffsets[2] + startValOffsets[3]) / 2;
     mcTestNameNullOrder = ['hgNA', 'hgA', 'vrNA', 'vrA', 'hrNA', 'hrA', 'vgNA', 'vgA'];
-    mcTestStartValNullOrder = [
+    /*mcTestStartValNullOrder = [
         -hRStartVal, //horizontal green nonadapt
         -hRStartVal, //horizontal green adapt
         vRStartVal,  //vertical red nonadapt
@@ -203,7 +203,17 @@ function initialize() {
         hRStartVal,  //horizontal red nonadapt
         hRStartVal,  //horizontal red adapt
         -vRStartVal, //vertical green nonadapt
-        -vRStartVal, //vertical grenn adapt
+        -vRStartVal //vertical grenn adapt
+    ];*/
+    mcTestStartValNullOrder = [
+        0, //horizontal green nonadapt
+        0, //horizontal green adapt
+        0,  //vertical red nonadapt
+        0,  //vertical red adapt
+        0,  //horizontal red nonadapt
+        0,  //horizontal red adapt
+        0, //vertical green nonadapt
+        0 //vertical grenn adapt
     ];
     mcTestOrder = generateMcOrder();
 
