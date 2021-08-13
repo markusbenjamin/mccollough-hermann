@@ -410,16 +410,22 @@ function draw() {
         text(instructions[2][2], width * 0.5, height * 0.25, width * 0.75, height * 0.45);
         noStroke();
 
-        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.375, height * 0.625, true);
-        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][0], width * 0.375, height * 0.625, stimSize * 0.7);
-        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][1], width * 0.375, height * 0.625, stimSize * 0.7);
+        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * (0.333-0.125), height * 0.625, true);
+        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][0], width * (0.333-0.125), height * 0.625, stimSize * 0.7);
+        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][1], width * (0.333-0.125), height * 0.625, stimSize * 0.7);
         textSize(fontSize);
         fill(1);
-        text('vagy', width * 0.5, height * 0.625)
+        text('vagy', width * ((0.333-0.125)+0.5)*0.5, height * 0.625)
         noFill();
-        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.625, height * 0.625, true);
-        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * 0.625, height * 0.625, stimSize * 0.7);
-        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * 0.625, height * 0.625, stimSize * 0.7);
+        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.5, height * 0.625, true);
+        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * 0.5, height * 0.625, stimSize * 0.7);
+        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * 0.5, height * 0.625, stimSize * 0.7);
+        fill(1);
+        text('vagy', width * ((0.666+0.125)+0.5)*0.5, height * 0.625)
+        noFill();
+        drawHermannGrid(hgN, hgR, stimSize * 0.7, hgVC, color(1), width * (0.666+0.125), height * 0.625, true);
+        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * (0.666+0.125), height * 0.625, stimSize * 0.7);
+        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * (0.666+0.125), height * 0.625, stimSize * 0.7);
     }
     if (stage == 6) { //HG nocol a/na pre 1
         drawHermannGrid(hgN, hgR, stimSize, color(1), color(1), stimX, stimY, true);
@@ -579,16 +585,22 @@ function draw() {
         text(instructions[5][2], width * 0.5, height * 0.25, width * 0.75, height * 0.45);
         noStroke();
 
-        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.375, height * 0.625, true);
-        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][0], width * 0.375, height * 0.625, stimSize * 0.7);
-        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][1], width * 0.375, height * 0.625, stimSize * 0.7);
+        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * (0.333-0.125), height * 0.625, true);
+        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][0], width * (0.333-0.125), height * 0.625, stimSize * 0.7);
+        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][1], width * (0.333-0.125), height * 0.625, stimSize * 0.7);
         textSize(fontSize);
         fill(1);
-        text('vagy', width * 0.5, height * 0.625)
+        text('vagy', width * ((0.333-0.125)+0.5)*0.5, height * 0.625)
         noFill();
-        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.625, height * 0.625, true);
-        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * 0.625, height * 0.625, stimSize * 0.7);
-        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * 0.625, height * 0.625, stimSize * 0.7);
+        drawHermannGrid(hgN, hgR, stimSize * 0.7, color(1), color(1), width * 0.5, height * 0.625, true);
+        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * 0.5, height * 0.625, stimSize * 0.7);
+        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * 0.5, height * 0.625, stimSize * 0.7);
+        fill(1);
+        text('vagy', width * ((0.666+0.125)+0.5)*0.5, height * 0.625)
+        noFill();
+        drawHermannGrid(hgN, hgR, stimSize * 0.7, hgVC, color(1), width * (0.666+0.125), height * 0.625, true);
+        drawIllusionStrengthMeter(0.75, [[-1, 1], [1, -1]][1], width * (0.666+0.125), height * 0.625, stimSize * 0.7);
+        drawIllusionStrengthMeterOppositeCircle([[-1, 1], [1, -1]][0], width * (0.666+0.125), height * 0.625, stimSize * 0.7);
     }
     if (stage == 29) { //HG below a/na post 1
         drawHermannGrid(hgN, hgR, stimSize, hgVC, color(1), stimX, stimY, true);
