@@ -104,7 +104,7 @@ function setParameters() {
     hgN = 7;
     hgR = 1 / 3;
     if(darkerStreetsVersion){
-        hgVC = color(1, 0.5, 1);
+        hgVC = color(1, 0.75, 1);
     }
     else{
         hgVC = color(1, 0.25, 1);
@@ -539,7 +539,12 @@ function draw() {
             if (adapt) {
                 if (millis() - adaptMaskSwitchTime < adaptDuration) {
                     var flicker = (adaptCounter / 2) % 2;
-                    drawMcCollough(adaptColors[flicker], stimSize, mcN, stimX, stimY, flicker);
+                    if(siegelVersion){
+                        drawMcCollough(adaptColors[1], stimSize, mcN, stimX, stimY, 1);
+                    }
+                    else{
+                        drawMcCollough(adaptColors[flicker], stimSize, mcN, stimX, stimY, flicker);
+                    }
                     var naDims = getNonadaptDims([-1, 1], stimX, stimY, stimSize);
                     var x = naDims[0];
                     var y = naDims[1];
