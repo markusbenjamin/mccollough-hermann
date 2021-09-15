@@ -28,6 +28,8 @@ var instructionsTable, instructions;
 
 var saved;
 
+var siegelVersion, darkerStreetsVersion;
+
 //load gaze filter
 let WASM_URL;
 
@@ -96,9 +98,17 @@ function windowResized() {
 }
 
 function setParameters() {
+    siegelVersion = false;
+    darkerStreetsVersion = true;
+
     hgN = 7;
     hgR = 1 / 3;
-    hgVC = color(1, 0.25, 1);
+    if(darkerStreetsVersion){
+        hgVC = color(1, 0.5, 1);
+    }
+    else{
+        hgVC = color(1, 0.25, 1);
+    }
 
     mcN = 15;
 
