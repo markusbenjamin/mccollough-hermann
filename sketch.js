@@ -564,9 +564,22 @@ function draw() {
             }
             else if (mask) {
                 if (millis() - adaptMaskSwitchTime < maskDuration) {
-                    fill(0);
+                    if(siegelVersion){
+                        fill(1/3,1,1);
+                    }
+                    else{
+                        fill(0);
+                    }
                     rect(stimX, stimY, stimSize, stimSize);
                     noFill();
+                    var naDims = getNonadaptDims([-1, 1], stimX, stimY, stimSize);
+                    var x = naDims[0];
+                    var y = naDims[1];
+                    fill(0);
+                    stroke(0);
+                    rect(x, y, naDims[2], naDims[3]);
+                    noFill();
+                    noStroke();
                     drawFixCross(stimX, stimY);
                 }
                 else {
