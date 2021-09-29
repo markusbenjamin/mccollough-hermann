@@ -98,8 +98,8 @@ function windowResized() {
 }
 
 function setParameters() {
-    siegelVersion = false;
-    darkerStreetsVersion = true;
+    siegelVersion = true;
+    darkerStreetsVersion = false;
 
     hgN = 7;
     hgR = 1 / 3;
