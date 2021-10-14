@@ -28,7 +28,7 @@ var instructionsTable, instructions;
 
 var saved;
 
-var siegelVersion, darkerStreetsVersion;
+var siegelVersion, darkerStreetsVersion, halfAdaptVersion;
 
 //load gaze filter
 let WASM_URL;
@@ -100,6 +100,7 @@ function windowResized() {
 function setParameters() {
     siegelVersion = true;
     darkerStreetsVersion = false;
+    halfAdaptVersion = true;
 
     hgN = 7;
     hgR = 1 / 3;
@@ -545,12 +546,16 @@ function draw() {
                     else{
                         drawMcCollough(adaptColors[flicker], stimSize, mcN, stimX, stimY, flicker);
                     }
-                    var naDims = getNonadaptDims([-1, 1], stimX, stimY, stimSize);
-                    var x = naDims[0];
-                    var y = naDims[1];
+                    var naDims;
+                    if(halfAdaptVersion){
+                        naDims = [stimX,stimY+stimSize*0.25,stimSize,stimSize*0.5];
+                    }
+                    else{
+                        naDims = getNonadaptDims([-1, 1], stimX, stimY, stimSize);
+                    }
                     fill(0);
                     stroke(0);
-                    rect(x, y, naDims[2], naDims[3]);
+                    rect(naDims[0], naDims[1], naDims[2], naDims[3]);
                     noFill();
                     noStroke();
                     drawFixCross(stimX, stimY);
@@ -565,21 +570,44 @@ function draw() {
             else if (mask) {
                 if (millis() - adaptMaskSwitchTime < maskDuration) {
                     if(siegelVersion){
+                        if(halfAdaptVersion){
+                            if(participantID%2==0){
+                                fill(0);
+                            }
+                            else{
+                                fill(1/3,1,1);
+                            }
+                        }
+                        else{
                         fill(1/3,1,1);
+                        }
                     }
                     else{
+                        if(halfAdaptVersion){
+                            if(participantID%2==0){
+                                fill(0);
+                            }
+                            else{
+                                fill(1/3,1,1);
+                            }
+                        }
+                        else{
                         fill(0);
+                        }
                     }
+                    if(halfAdaptVersion){
+                        rect(stimX, stimY-stimSize*0.25, stimSize, stimSize*0.5);
+                    }
+                    else{
                     rect(stimX, stimY, stimSize, stimSize);
                     noFill();
                     var naDims = getNonadaptDims([-1, 1], stimX, stimY, stimSize);
-                    var x = naDims[0];
-                    var y = naDims[1];
                     fill(0);
                     stroke(0);
-                    rect(x, y, naDims[2], naDims[3]);
+                    rect(naDims[0], naDims[1], naDims[2], naDims[3]);
                     noFill();
                     noStroke();
+                    }
                     drawFixCross(stimX, stimY);
                 }
                 else {
